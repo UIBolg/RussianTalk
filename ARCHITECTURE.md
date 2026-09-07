@@ -60,6 +60,14 @@ jobs.
   "ink-soft") and every screen just points at those names instead of
   picking its own colors.
 
+- **`src/languageHacks.js`** — A second, smaller recipe book, just for
+  the "Language Hacks" section (see below): root-word families,
+  prefixes, cases, the aspect decision tree, motion verbs, sentence
+  skeletons, and the Arabic↔Russian comparison cards. Kept separate
+  from `data.js` because it isn't dialog content — no `topicId`, no
+  `DIALOGS` entry — but it follows the exact same rule: this is the
+  only file with that content in it, and components only render it.
+
 - **`src/components/`** — The staff, each with one job:
   - `TopBar.jsx` — the header bar with the logo and the Flashcards button
   - `Home.jsx` — the grid of topic cards you see first
@@ -82,6 +90,13 @@ jobs.
   - `SpeakerButton.jsx` — the reusable 🔊 button that reads a piece of
     text out loud when tapped. Any new "read this aloud" button
     anywhere in the app should reuse this component, not build its own.
+  - `LanguageHacks.jsx` — the "Language Hacks" page shell: a
+    `back-row`/title like every other screen, then a `topic-tab` row
+    that switches between 8 sub-components, each in its own file
+    (`RootTree.jsx`, `PrefixMap.jsx`, `CaseWheel.jsx`,
+    `AspectHelper.jsx`, `MotionVerbs.jsx`, `SkeletonBuilder.jsx`,
+    `ArabicRussianCards.jsx`, `TopFifteen.jsx`) — see "How the Language
+    Hacks Section Works" below.
 
 - **`.github/workflows/deploy.yml`** — The auto-publish robot. Every
   time changes are pushed to `main`, this automatically rebuilds the
@@ -473,7 +488,85 @@ no longer applies — there is no real email to confirm anymore.)
   the first sign-up for a given ID succeeds and claims it; that's the
   intended mechanism, not a gap to close.
 
-## 8. Things Not To Do
+## 8. How the Language Hacks Section Works
+
+"Language Hacks" (nav button: "💡 Hacks", `view === 'hacks'` in
+`App.jsx`) is not a dialog topic and doesn't go through `TopicView.jsx`
+at all — it's a standalone visual reference for the highest-leverage
+Russian patterns (word roots, prefixes, cases, aspect, motion verbs,
+sentence skeletons, and Arabic↔Russian parallels), aimed at a beginner
+who thinks in patterns rather than rote grammar tables. No flashcards,
+no login, no dialog content — just `src/languageHacks.js` rendered by
+`LanguageHacks.jsx` and its 8 sub-components.
+
+**Why a separate data file instead of adding to `data.js`.**
+`data.js` is specifically the dialog/topic phrasebook — every entry
+has a `topicId` and lives inside `TOPICS`/`DIALOGS`. Language Hacks
+content (a root-word family, a prefix's arrow and color, a case's
+example sentence) doesn't fit that shape and isn't a dialog a student
+reads bubble-by-bubble, so it gets its own file instead of forcing a
+mismatched shape into `data.js`.
+
+**One shared color system across every sub-component.** `HACK_COLORS`
+in `languageHacks.js` defines six accent colors — three are the
+existing `--amber`/`--frost`/`--sage` tokens, the other three are the
+exact hex values already used elsewhere in the app as topic colors
+(hotels/smalltalk's plum, emergencies' brick red, banksim's teal) —
+reused here rather than inventing a second palette. Every prefix in
+`PREFIXES` is assigned one of these colors plus a spatial arrow
+(`→` into, `←` out of, `↑` upward, `⇄` across, etc.), and
+`PREFIX_INFO` (a lookup built from `PREFIXES`) is what `RootTree.jsx`
+and `MotionVerbs.jsx` both read from — so "при-" is the same color and
+arrow in the Prefix Map, inside a root-word branch, and inside the
+идти/ехать prefix family. If you add a 13th prefix, add it once to
+`PREFIXES` and every component picks it up automatically; don't
+hand-pick a color inside an individual component.
+
+**Component-by-component, briefly:**
+- `RootTree.jsx` — tabs between the two root families in
+  `ROOT_FAMILIES` (`ключ`, `нести`); each branch is a button that
+  toggles open to show its `[prefix] + [root] = meaning` breakdown.
+- `PrefixMap.jsx` — a plain grid over `PREFIXES`, no interaction beyond
+  reading.
+- `CaseWheel.jsx` — not a literal wheel/SVG diagram (kept as a
+  responsive card grid instead, for the same mobile-friendliness
+  reason as everything else here) — `CASES` marked `primary: true`
+  render larger/first, the rest smaller below. `highlightExample()`
+  wraps the relevant word from the example sentence in `<mark>` using
+  the case's own color.
+- `AspectHelper.jsx` — walks `ASPECT_TREE`, a small nested
+  yes/no-branching object, by keeping an array of the choices made so
+  far and re-deriving the current node from the root every render
+  (`path.reduce`-style) instead of storing "current node" directly —
+  that's what makes "Start over" trivial (just clear the array).
+- `MotionVerbs.jsx` — `MOTION_VERB_PAIRS` (straight-arrow "one trip" vs
+  loop-icon "habitual") plus `MOTION_PREFIX_FAMILY`, which reuses
+  `PREFIX_INFO` for its chips' colors, same as `RootTree.jsx`.
+- `SkeletonBuilder.jsx` — picks a skeleton from `SKELETONS`, then a
+  filler from `SKELETON_FILLERS[skeleton.id]` (keyed by skeleton id),
+  and assembles the sentence with a plain `.replace('___', filler.ru)`.
+- `ArabicRussianCards.jsx` — reuses the exact `.flip-card`/
+  `.flip-card-inner`/`.flip-card-face` 3D-flip mechanics already built
+  for `TrainingModal.jsx`'s training-quiz cards, just in a taller
+  variant (`.hack-flip-card`) since these cards hold more text than a
+  single word.
+- `TopFifteen.jsx` — a simple index-based Prev/Next stepper over
+  `TOP_FIFTEEN` (a plain array of strings) with dot indicators, the
+  same `useState` step pattern as `AspectHelper.jsx`.
+
+**A real mobile bug this surfaced, not something to redo:** adding a
+4th `.nav-btn` ("💡 Hacks") to the top bar pushed the nav row past the
+viewport width on narrow phones, forcing the *entire page* to scroll
+horizontally — confirmed with a 375px-wide Playwright check before
+this shipped. The fix was **not** to touch Language Hacks' own layout
+(none of its sections caused the overflow); it was a small mobile
+media query on `.nav-actions` in `styles.css` that lets the nav row
+itself scroll horizontally, containing the overflow instead of letting
+it leak into the page. If you add a 5th top-level nav button later,
+re-run that same narrow-viewport overflow check — don't assume it
+still fits.
+
+## 9. Things Not To Do
 
 - **Saved words are tracked globally by word text — one word equals
   one flashcard, no matter how many topics or conversations it appears
