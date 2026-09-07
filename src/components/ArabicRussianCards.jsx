@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { ARABIC_RUSSIAN_CARDS } from '../languageHacks.js';
+import { recordSectionView } from '../hackProgress.js';
 
 export default function ArabicRussianCards() {
   const [flipped, setFlipped] = useState(() => new Set());
@@ -11,12 +12,13 @@ export default function ArabicRussianCards() {
       else next.add(title);
       return next;
     });
+    recordSectionView(`arabic:${title}`);
   }
 
   return (
     <div className="hack-section">
       <p className="hack-intro">
-        The strongest parallels between Arabic and Russian — tap a card to see the Russian side.
+        "Wait — Russian does this too?" Tap a card for the small revelation.
       </p>
       <div className="arabic-cards-grid">
         {ARABIC_RUSSIAN_CARDS.map((c) => {

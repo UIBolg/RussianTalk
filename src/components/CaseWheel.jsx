@@ -16,6 +16,11 @@ function highlightExample(example) {
 function CaseCard({ c, large }) {
   return (
     <div className={`case-card ${large ? 'large' : 'small'}`} style={{ borderColor: c.color }}>
+      <div className="case-card-persona">
+        <span className="case-card-persona-emoji" style={{ background: c.color }}>{c.personaEmoji}</span>
+        <span className="case-card-persona-name">{c.personality}</span>
+      </div>
+      <p className="case-card-joke">{c.joke}</p>
       <div className="case-card-head" style={{ color: c.color }}>
         <span className="case-card-name">{c.name}</span>
         <span className="case-card-ru">{c.ru}</span>
@@ -39,8 +44,8 @@ export default function CaseWheel() {
   return (
     <div className="hack-section">
       <p className="hack-intro">
-        Not a grammar table — each case answers "what relationship does this word express?"
-        The four you'll use constantly are bigger; the other two are still worth knowing.
+        The Relationship Wheel — 6 cases, 6 personalities. Not a grammar table: each one answers
+        "what relationship does this word express?" The four you'll use constantly are bigger.
       </p>
       <div className="case-grid primary">
         {primary.map((c) => (

@@ -525,9 +525,10 @@ hand-pick a color inside an individual component.
 **Component-by-component, briefly:**
 - `RootTree.jsx` — tabs between the two root families in
   `ROOT_FAMILIES` (`ключ`, `нести`); each branch is a button that
-  toggles open to show its `[prefix] + [root] = meaning` breakdown.
-- `PrefixMap.jsx` — a plain grid over `PREFIXES`, no interaction beyond
-  reading.
+  toggles open, but the meaning stays hidden behind a guess-then-reveal
+  prompt until tapped (see section 9).
+- `PrefixMap.jsx` — a grid over `PREFIXES`; each card is a
+  guess-then-reveal button (see section 9), not a plain read-only grid.
 - `CaseWheel.jsx` — not a literal wheel/SVG diagram (kept as a
   responsive card grid instead, for the same mobile-friendliness
   reason as everything else here) — `CASES` marked `primary: true`
@@ -545,14 +546,17 @@ hand-pick a color inside an individual component.
 - `SkeletonBuilder.jsx` — picks a skeleton from `SKELETONS`, then a
   filler from `SKELETON_FILLERS[skeleton.id]` (keyed by skeleton id),
   and assembles the sentence with a plain `.replace('___', filler.ru)`.
+  A 🎰 Spin button and streak counter sit on top of this (see section 9).
 - `ArabicRussianCards.jsx` — reuses the exact `.flip-card`/
   `.flip-card-inner`/`.flip-card-face` 3D-flip mechanics already built
   for `TrainingModal.jsx`'s training-quiz cards, just in a taller
   variant (`.hack-flip-card`) since these cards hold more text than a
   single word.
-- `TopFifteen.jsx` — a simple index-based Prev/Next stepper over
-  `TOP_FIFTEEN` (a plain array of strings) with dot indicators, the
-  same `useState` step pattern as `AspectHelper.jsx`.
+- `TopFifteen.jsx` — an index-based stepper over `TOP_FIFTEEN` (a plain
+  array of strings), presented as a swipeable "Stories"-style deck: a
+  segmented progress bar instead of dots, and the card itself is
+  tappable (left third = back, rest = forward), same `useState` step
+  pattern as `AspectHelper.jsx`.
 
 **A real mobile bug this surfaced, not something to redo:** adding a
 4th `.nav-btn` ("💡 Hacks") to the top bar pushed the nav row past the
@@ -566,7 +570,98 @@ it leak into the page. If you add a 5th top-level nav button later,
 re-run that same narrow-viewport overflow check — don't assume it
 still fits.
 
-## 9. Things Not To Do
+## 9. How the Mascot/"Stickiness" Layer Works
+
+Language Hacks' 8 sections got a second pass on top of the base
+content: every abstract grammar concept now has a vivid, consistent
+mascot/mini-scene attached to it, plus light localStorage-backed
+gamification. This is a **layer on top of** section 8, not a
+replacement — the underlying data/component split from section 8
+still holds.
+
+**Why mascots live in content data, not components.** Same reasoning
+as the color system in section 8: `Mascot.jsx` is a dumb presentation
+component (emoji in a colored circle, optional CSS animation) that
+takes `emoji`/`color`/`animation` as props. The actual mascot
+identity — which emoji, what name, what scene text, which of the 5
+shared animations — lives in `languageHacks.js` (`PREFIXES[].mascot`,
+`ROOT_FAMILIES[].mascotEmoji`/`mascotName`, `CASES[].personality`/
+`personaEmoji`/`joke`, and the new `MASCOTS` export for Aspect/Motion).
+Renaming a mascot or changing its scene is a data edit, never a
+component edit.
+
+**`MASCOTS` (in `languageHacks.js`)** holds the two mascot pairs that
+don't attach to a single list item: `MASCOTS.aspect.perfective`/
+`imperfective` (Perfective Pete / Imperfective Ira) and
+`MASCOTS.motion.oneDirection`/`multiDirection` (Straight-Line Sasha /
+Loop-the-Loop Lena). `AspectHelper.jsx` and `MotionVerbs.jsx` read from
+here so the same two characters show up everywhere that concept
+reappears, instead of each component inventing its own labels.
+
+**5 shared animations, not bespoke art per mascot.** `Mascot.jsx`
+takes an `animation` prop that maps to one of 5 CSS classes
+(`.mascot-anim-pop/fade/shake/burst/launch`, keyframed in
+`styles.css`), and every one of the 12 prefixes is assigned exactly
+one of these 5 in its `mascot.animation` field — a diver "pops" in,
+smoke "fades" out, a piñata "bursts", a firework "launches", etc. This
+is the deliberate scope for "simple CSS/SVG, doesn't need polished
+art": one small reusable animation vocabulary, not 12 one-off effects.
+All 5 are disabled under `prefers-reduced-motion: reduce`.
+
+**Guess-then-reveal (active recall).** `RootTree.jsx` and
+`PrefixMap.jsx` both keep a `revealed` `Set` of item keys instead of a
+single "open" value, so each word/prefix independently starts hidden
+behind a "What do you think this means? Tap to check →" prompt and
+stays revealed once tapped. The с-/со- prefix card additionally shows
+a keyword-mnemonic box (`.prefix-card-mnemonic`) only after reveal —
+that's the one spot using the "sounds like an English/Arabic word"
+trick (`PREFIXES[].mnemonic`), since it's the one prefix where the
+hook is clean; don't force a mnemonic onto every prefix just for
+consistency.
+
+**`hackProgress.js`** is a single-purpose localStorage helper, same
+pattern as `speech.js`/`selectors.js` — read/write are wrapped in
+try/catch so a blocked or full localStorage degrades to "the feature
+just doesn't persist," never a thrown error. It tracks two independent
+things under two keys:
+- `rustalk-hacks-progress` — a `{sectionId: timestamp}` map, written by
+  `recordSectionView()` every time `LanguageHacks.jsx` changes tabs
+  (and by `RootTree`/`PrefixMap`/`AspectHelper`/`ArabicRussianCards`/
+  `TopFifteen` on individual item reveals, using their own
+  `prefix:word` / `top15:index`-style sub-ids — these sub-ids aren't
+  read by anything yet, they're just future-proofing the same key
+  shape). `getComeBackTo()` reads this map to find the
+  least-recently-viewed *other* section already visited, which
+  `LanguageHacks.jsx` shows as a dismissible "👋 Come back to X"
+  nudge banner recomputed on every tab change.
+- `rustalk-hacks-skeleton-streak` — a `{count, seen}` object,
+  `seen` being an array of `"skeletonId::fillerRu"` strings so the 🔥
+  streak in `SkeletonBuilder.jsx` only increments on a genuinely new
+  sentence combination, not on re-picking one already built this
+  session (or a previous one — it persists across reloads).
+
+**Nav tab checkmarks.** `LanguageHacks.jsx` seeds a `viewed` Set from
+`getViewedSections()` on mount and adds to it on every tab change, so
+tabs already visited this browser show a small "✓" (`.hack-tab-check`)
+next to their label — a cheap "you've been here" signal, not a
+progress requirement.
+
+**Sentence-builder slot machine.** The 🎰 Spin button in
+`SkeletonBuilder.jsx` picks a random *different* filler index (a
+one-line "if it lands on the same index, bump it by one" guard, no
+`while` loop) and briefly dips `.skeleton-result-ru`'s opacity via a
+`spinning` class for a 260ms transition — a small physical-feeling
+payoff rather than an instant swap.
+
+**If you add a new Language Hacks section or a 9th sub-component**,
+give it a mascot (reuse `MASCOTS`/`PREFIX_INFO` if the concept already
+has one — don't invent a second mascot for the same idea), wire a
+guess-before-reveal step if there's a meaning to guess, and call
+`recordSectionView()` on whatever id makes sense so it participates in
+the checkmark/nudge system. You don't need a new localStorage key for
+it — reuse `rustalk-hacks-progress`.
+
+## 10. Things Not To Do
 
 - **Saved words are tracked globally by word text — one word equals
   one flashcard, no matter how many topics or conversations it appears

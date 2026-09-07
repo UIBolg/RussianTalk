@@ -405,6 +405,45 @@ main{flex:1; padding:24px;}
 }
 .hack-section{ max-width:100%; }
 .hack-intro{ color:var(--ink-soft); font-size:14px; margin:0 0 18px; max-width:56ch; }
+.hack-tab-check{ color:var(--sage); font-weight:500; }
+
+/* "Come back to this" spaced-repetition nudge */
+.hack-nudge{
+  display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap;
+  background:var(--sage-tint); color:var(--sage); border-radius:12px; padding:10px 14px;
+  font-size:13px; margin-bottom:14px;
+}
+.hack-nudge-actions{ display:flex; align-items:center; gap:8px; flex-shrink:0; }
+.hack-nudge-go{
+  border:none; background:var(--sage); color:var(--paper); border-radius:999px;
+  padding:6px 14px; font-size:12.5px; font-weight:500; cursor:pointer; min-height:32px;
+}
+.hack-nudge-dismiss{
+  border:none; background:none; color:var(--sage); font-size:16px; cursor:pointer;
+  padding:0 4px; min-height:auto; line-height:1;
+}
+
+/* Shared mascot badge + its small animation vocabulary. Every character in
+   this section (prefixes, root branches, aspect, motion) renders through
+   the same Mascot.jsx component and these same five keyframes, instead of
+   each screen inventing its own animation. */
+.mascot{
+  display:inline-flex; align-items:center; justify-content:center; border-radius:50%;
+  flex-shrink:0; line-height:1;
+}
+@keyframes mascot-pop{ 0%{ transform:scale(.5); opacity:0; } 60%{ transform:scale(1.15); opacity:1; } 100%{ transform:scale(1); } }
+@keyframes mascot-fade{ 0%{ opacity:0; transform:translateX(-6px); } 100%{ opacity:1; transform:translateX(0); } }
+@keyframes mascot-shake{ 0%,100%{ transform:translateX(0); } 25%{ transform:translateX(-4px); } 75%{ transform:translateX(4px); } }
+@keyframes mascot-burst{ 0%{ transform:scale(.6); opacity:0; } 50%{ transform:scale(1.3); opacity:1; } 100%{ transform:scale(1); } }
+@keyframes mascot-launch{ 0%{ transform:translateY(8px); opacity:0; } 100%{ transform:translateY(0); opacity:1; } }
+.mascot-anim-pop{ animation:mascot-pop .4s ease; }
+.mascot-anim-fade{ animation:mascot-fade .4s ease; }
+.mascot-anim-shake{ animation:mascot-shake .4s ease; }
+.mascot-anim-burst{ animation:mascot-burst .45s ease; }
+.mascot-anim-launch{ animation:mascot-launch .4s ease; }
+@media (prefers-reduced-motion: reduce){
+  .mascot-anim-pop, .mascot-anim-fade, .mascot-anim-shake, .mascot-anim-burst, .mascot-anim-launch{ animation:none; }
+}
 .hack-tabs{ display:flex; gap:8px; margin-bottom:18px; }
 .hack-tabs.wrap{ flex-wrap:wrap; }
 .hack-tab{
@@ -420,38 +459,48 @@ main{flex:1; padding:24px;}
   background:var(--ink); color:var(--paper); border-radius:var(--radius);
   padding:14px 22px; text-align:center; box-shadow:var(--shadow);
 }
-.root-tree-root-word{ display:block; font-family:'Poppins',sans-serif; font-size:22px; font-weight:500; }
+.root-tree-root-word{ display:block; font-family:'Poppins',sans-serif; font-size:22px; font-weight:500; margin-top:6px; }
 .root-tree-root-meaning{ display:block; font-size:12px; opacity:.75; margin-top:2px; }
 .root-tree-branches{
   display:grid; grid-template-columns:repeat(auto-fill, minmax(180px,1fr)); gap:12px; width:100%;
 }
 .root-tree-branch{ display:flex; flex-direction:column; }
 .root-tree-node{
-  display:flex; align-items:center; gap:6px; flex-wrap:wrap;
+  display:flex; flex-direction:column; align-items:flex-start; gap:6px;
   background:var(--paper); border:2px solid var(--line); border-radius:12px;
-  padding:10px 12px; cursor:pointer; text-align:left; min-height:44px;
+  padding:10px 12px; cursor:pointer; text-align:left; min-height:44px; width:100%;
 }
 .root-tree-node.open{ background:var(--paper-2); }
+.root-tree-scene{ font-size:20px; line-height:1; }
+.root-tree-word-row{ display:flex; align-items:center; gap:6px; flex-wrap:wrap; }
 .root-tree-prefix{
   color:var(--paper); font-size:11px; font-weight:500; border-radius:999px; padding:2px 8px;
 }
 .root-tree-word{ font-family:'Poppins',sans-serif; font-weight:500; font-size:15px; color:var(--ink); }
 .root-tree-tr{ font-size:12px; color:var(--ink-soft); }
+.root-tree-guess-prompt{ font-size:11.5px; color:var(--ink-soft); font-style:italic; }
 .root-tree-breakdown{
   font-size:12.5px; color:var(--ink-soft); background:var(--paper-2); border-radius:10px;
   padding:8px 12px; margin-top:6px;
 }
+.root-tree-scene-text{ font-weight:500; color:var(--ink); margin-bottom:4px; }
 
 /* Prefix map */
-.prefix-grid{ display:grid; grid-template-columns:repeat(auto-fill, minmax(150px,1fr)); gap:12px; }
+.prefix-grid{ display:grid; grid-template-columns:repeat(auto-fill, minmax(170px,1fr)); gap:12px; }
 .prefix-card{
   background:var(--paper); border:1px solid var(--line); border-top:4px solid var(--line);
-  border-radius:12px; padding:12px; box-shadow:var(--shadow);
+  border-radius:12px; padding:12px; box-shadow:var(--shadow); text-align:left; cursor:pointer;
+  display:flex; flex-direction:column; gap:8px; width:100%;
 }
 .prefix-card-top{ display:flex; justify-content:space-between; align-items:center; }
 .prefix-card-prefix{ font-family:'Poppins',sans-serif; font-weight:500; font-size:17px; }
-.prefix-card-arrow{ font-size:20px; }
-.prefix-card-meaning{ font-size:12.5px; color:var(--ink-soft); margin-top:6px; }
+.prefix-card-arrow{ font-size:16px; }
+.prefix-card-scene{ font-size:12px; color:var(--ink-soft); line-height:1.4; }
+.prefix-card-guess{ font-size:11.5px; color:var(--ink-soft); font-style:italic; }
+.prefix-card-meaning{ font-size:12.5px; color:var(--ink); font-weight:500; }
+.prefix-card-mnemonic{
+  font-size:11.5px; color:var(--ink-soft); background:var(--amber-tint); border-radius:8px; padding:6px 8px;
+}
 
 /* Case wheel */
 .case-grid{ display:grid; gap:12px; margin-bottom:16px; }
@@ -462,7 +511,14 @@ main{flex:1; padding:24px;}
   padding:14px; box-shadow:var(--shadow);
 }
 .case-card.small{ padding:11px; }
-.case-card-head{ display:flex; justify-content:space-between; align-items:baseline; font-weight:500; }
+.case-card-persona{ display:flex; align-items:center; gap:8px; margin-bottom:4px; }
+.case-card-persona-emoji{
+  display:inline-flex; align-items:center; justify-content:center; width:26px; height:26px;
+  border-radius:50%; font-size:14px; flex-shrink:0;
+}
+.case-card-persona-name{ font-family:'Poppins',sans-serif; font-weight:500; font-size:13.5px; color:var(--ink); }
+.case-card-joke{ font-size:12px; color:var(--ink-soft); font-style:italic; margin:0 0 10px; }
+.case-card-head{ display:flex; justify-content:space-between; align-items:baseline; font-weight:500; padding-top:8px; border-top:1px dashed var(--line); }
 .case-card.large .case-card-name{ font-size:17px; }
 .case-card.small .case-card-name{ font-size:14px; }
 .case-card-ru{ font-size:11px; color:var(--ink-soft); }
@@ -479,13 +535,16 @@ main{flex:1; padding:24px;}
   background:var(--paper-2); border:1px solid var(--line); border-radius:var(--radius);
   padding:22px; text-align:center; max-width:440px; margin:0 auto;
 }
+.aspect-mascot-row{ display:flex; align-items:center; justify-content:center; gap:12px; margin-bottom:14px; }
+.aspect-vs{ font-size:12px; color:var(--ink-soft); font-style:italic; }
 .aspect-question{ font-size:16px; font-weight:500; margin-bottom:16px; }
 .aspect-choices{ display:flex; gap:10px; justify-content:center; }
 .aspect-choice-btn{
   border:none; background:var(--frost); color:var(--paper); border-radius:999px;
   padding:10px 24px; font-weight:500; font-size:14px; cursor:pointer; min-height:44px; min-width:90px;
 }
-.aspect-result-label{ font-family:'Poppins',sans-serif; font-weight:500; font-size:17px; color:var(--frost); }
+.aspect-result-label{ font-family:'Poppins',sans-serif; font-weight:500; font-size:17px; color:var(--ink); margin-top:10px; }
+.aspect-result-tagline{ font-size:12.5px; color:var(--ink-soft); font-style:italic; margin-top:2px; }
 .aspect-result-example{ background:var(--paper); border-radius:10px; padding:12px; margin:14px 0; }
 .aspect-result-ru{ font-size:16px; }
 .aspect-result-tr{ font-size:13px; color:var(--ink-soft); font-style:italic; margin-top:4px; }
@@ -505,7 +564,6 @@ main{flex:1; padding:24px;}
 }
 @media (max-width:560px){ .motion-row{ grid-template-columns:1fr; } }
 .motion-verb{ display:flex; align-items:center; gap:6px; flex-wrap:wrap; }
-.motion-icon{ font-size:16px; color:var(--frost); width:20px; text-align:center; }
 .motion-word{ font-family:'Poppins',sans-serif; font-weight:500; }
 .motion-verb-label{ font-size:11px; color:var(--ink-soft); }
 .motion-tr{ font-size:12.5px; color:var(--ink-soft); text-align:right; }
@@ -520,16 +578,23 @@ main{flex:1; padding:24px;}
 .motion-family-tr{ font-size:11.5px; color:var(--ink-soft); }
 
 /* Sentence skeleton builder */
-.skeleton-filler-row{ display:flex; flex-wrap:wrap; gap:8px; margin-bottom:18px; }
+.skeleton-filler-row{ display:flex; flex-wrap:wrap; gap:8px; margin-bottom:18px; align-items:center; }
+.skeleton-spin-btn{
+  border:none; background:var(--amber); color:var(--paper); border-radius:999px;
+  padding:7px 16px; font-size:13px; font-weight:500; cursor:pointer; min-height:36px;
+}
 .skeleton-result{
   background:var(--paper-2); border:1px solid var(--line); border-radius:var(--radius);
   padding:18px; position:relative;
 }
+.skeleton-result-top{ display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:8px; margin-bottom:10px; }
 .skeleton-case-tag{
   display:inline-block; font-size:11px; background:var(--sage-tint); color:var(--sage);
-  border-radius:999px; padding:2px 9px; font-weight:500; margin-bottom:10px;
+  border-radius:999px; padding:2px 9px; font-weight:500;
 }
-.skeleton-result-ru{ font-size:19px; font-family:'Poppins',sans-serif; display:flex; align-items:center; gap:8px; }
+.skeleton-streak{ font-size:12px; color:var(--ink-soft); font-weight:500; }
+.skeleton-result-ru{ font-size:19px; font-family:'Poppins',sans-serif; display:flex; align-items:center; gap:8px; transition:opacity .15s ease; }
+.skeleton-result-ru.spinning{ opacity:.35; }
 .skeleton-result-tr{ font-size:13px; color:var(--ink-soft); margin-top:4px; }
 
 /* Arabic <-> Russian cards */
@@ -542,22 +607,23 @@ main{flex:1; padding:24px;}
 .arabic-card-russian{ font-family:'Poppins',sans-serif; font-size:16px; margin-top:8px; }
 .arabic-card-why{ font-size:12px; color:var(--ink-soft); margin-top:8px; padding:0 6px; }
 
-/* Top 15 */
+/* Top 15 - a swipeable "stories" deck: a segmented progress bar up top
+   (like a chat app's story viewer), a tappable card (left third = back,
+   rest = forward), and explicit Prev/Next buttons for anyone who'd rather
+   not guess where to tap. */
+.top15-progress{ display:flex; gap:4px; margin-bottom:12px; }
+.top15-segment{ flex:1; height:4px; border-radius:999px; background:var(--line); }
+.top15-segment.filled{ background:var(--frost); }
 .top15-card{
   background:var(--ink); color:var(--paper); border-radius:var(--radius);
   padding:34px 26px; text-align:center; min-height:140px; display:flex; flex-direction:column;
-  align-items:center; justify-content:center; box-shadow:var(--shadow);
+  align-items:center; justify-content:center; box-shadow:var(--shadow); cursor:pointer; user-select:none;
 }
 .top15-count{ font-size:12px; opacity:.7; margin-bottom:10px; font-weight:500; }
 .top15-text{ font-size:19px; font-family:'Poppins',sans-serif; margin:0; max-width:44ch; }
 .top15-controls{ display:flex; align-items:center; justify-content:space-between; gap:10px; margin-top:16px; }
 .top15-nav-btn{
   border:1px solid var(--line); background:var(--paper); border-radius:999px;
-  padding:9px 16px; font-weight:500; font-size:13px; cursor:pointer; min-height:40px;
+  padding:9px 16px; font-weight:500; font-size:13px; cursor:pointer; min-height:40px; flex:1;
 }
 .top15-nav-btn:disabled{ opacity:.4; cursor:default; }
-.top15-dots{ display:flex; gap:5px; flex-wrap:wrap; justify-content:center; }
-.top15-dot{
-  width:8px; height:8px; border-radius:50%; border:none; background:var(--line); cursor:pointer; padding:0; min-height:auto;
-}
-.top15-dot.active{ background:var(--frost); }

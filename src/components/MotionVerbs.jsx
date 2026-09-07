@@ -1,27 +1,32 @@
-import { MOTION_VERB_PAIRS, MOTION_PREFIX_FAMILY, PREFIX_INFO } from '../languageHacks.js';
+import { MOTION_VERB_PAIRS, MOTION_PREFIX_FAMILY, PREFIX_INFO, MASCOTS } from '../languageHacks.js';
 import SpeakerButton from './SpeakerButton.jsx';
+import Mascot from './Mascot.jsx';
 
 export default function MotionVerbs() {
+  const sasha = MASCOTS.motion.oneDirection;
+  const lena = MASCOTS.motion.multiDirection;
+
   return (
     <div className="hack-section">
       <p className="hack-intro">
-        Two verbs for "the same" motion: a straight line for one specific trip, a loop for a habit or round trip.
+        Straight-Line Sasha walks one direction, one trip. Loop-the-Loop Lena walks the same route on repeat.
+        Same two characters, every pair below.
       </p>
 
       <div className="motion-list">
         {MOTION_VERB_PAIRS.map((pair) => (
           <div key={pair.oneDirection} className="motion-row">
             <div className="motion-verb">
-              <span className="motion-icon">→</span>
+              <Mascot emoji={sasha.emoji} color="var(--amber)" size={30} />
               <span className="motion-word">{pair.oneDirection}</span>
               <SpeakerButton text={pair.oneDirection} label={`Play "${pair.oneDirection}"`} />
-              <span className="motion-verb-label">one trip</span>
+              <span className="motion-verb-label">Sasha — one trip</span>
             </div>
             <div className="motion-verb">
-              <span className="motion-icon">⟲</span>
+              <Mascot emoji={lena.emoji} color="var(--frost)" size={30} />
               <span className="motion-word">{pair.multiDirection}</span>
               <SpeakerButton text={pair.multiDirection} label={`Play "${pair.multiDirection}"`} />
-              <span className="motion-verb-label">habitual / round trip</span>
+              <span className="motion-verb-label">Lena — habitual / round trip</span>
             </div>
             <div className="motion-tr">{pair.tr}</div>
           </div>
@@ -29,13 +34,15 @@ export default function MotionVerbs() {
       </div>
 
       <p className="hack-intro" style={{ marginTop: 24 }}>
-        Add a prefix to идти/ехать and you get a whole family of directional verbs — the same prefixes and colors from the Prefix Map.
+        Sasha puts on a badge for every prefix — same mascots and colors as the Prefix Squad.
       </p>
       <div className="motion-family">
+        <Mascot emoji={sasha.emoji} color="var(--amber)" size={40} />
         {MOTION_PREFIX_FAMILY.members.map((m) => {
           const info = PREFIX_INFO[m.prefix];
           return (
             <div key={m.word} className="motion-family-chip" style={{ borderColor: info?.color }}>
+              <Mascot emoji={info?.mascot.emoji} color={info?.color} size={26} />
               <span className="motion-family-prefix" style={{ background: info?.color }}>{m.prefix}</span>
               <span className="motion-family-word">{m.word}</span>
               <SpeakerButton text={m.word} label={`Play "${m.word}"`} />
