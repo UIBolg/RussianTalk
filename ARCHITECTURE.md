@@ -116,7 +116,13 @@ jobs.
 A simple checklist for "where does my change go?":
 
 1. **Adding a new conversation or topic?** → Only `src/data.js`. Don't
-   put Russian text or dialog content anywhere else.
+   put Russian text or dialog content anywhere else. (This is for
+   *dialogs* specifically — a scripted back-and-forth a student reads
+   bubble by bubble. A browsable grammar reference belongs in
+   `languageHacks.js`; a generated drill/exercise belongs in its own
+   practice file — see "How Practice Content Works" below. Three
+   different content shapes, three different homes — don't force one
+   into another just because they all show up as a homepage card.)
 2. **Adding a new screen, or a new reusable visual piece (a button
    style, a card, a modal)?** → A new file in `src/components/`, one
    component per file.
@@ -661,7 +667,78 @@ guess-before-reveal step if there's a meaning to guess, and call
 the checkmark/nudge system. You don't need a new localStorage key for
 it — reuse `rustalk-hacks-progress`.
 
-## 10. Things Not To Do
+## 10. How Practice Content Works
+
+The app has three distinct content shapes now, not two — worth being
+explicit about, since it's easy to assume "not a dialog" only ever
+means "put it with Language Hacks":
+
+| Content type | Lives in | Shape | Screen family |
+|---|---|---|---|
+| Dialogs | `data.js` | scripted conversation, read bubble by bubble | `TopicView.jsx` / `ChatPanel.jsx` |
+| Reference | `languageHacks.js` | browsable patterns, no right/wrong answer | `LanguageHacks.jsx` + 8 sub-components |
+| Practice/exercise | `practiceItems.js` + one file per feature (e.g. `numberWords.js`) | generated drill content with a correct answer, often timed | `PracticeView.jsx` + one component per `kind` |
+
+**Practice content is generated, not authored.** Numbers (1–1000) is
+the first practice feature: rather than 1000 hand-typed Russian
+strings in a data file (nothing to proofread against, easy to typo),
+`numberWords.js` holds a small `numberToRussianWords(n)` formation
+function built from lookup tables (units/teens/tens/hundreds) — the
+same rule a student would be taught. Both the flashcard deck and the
+quiz call this function per number; there's no giant array of numbers
+sitting in a file. If a future practice feature (verb conjugation,
+etc.) is naturally rule-based the same way, generate it the same way
+— don't hand-author what a formation function can produce correctly
+every time.
+
+**`practiceItems.js` is a small registry, not the content itself.**
+One entry per practice feature, shaped just enough like a topic
+(`id`, `title`, `ru`, `icon`, `color`) that `Home.jsx` can render it
+with the *exact same* `.topic-card` markup as a real topic — plus one
+extra field, `kind` (e.g. `'numbers'`), that tells the app which
+practice screen to open. Adding a new practice feature later means
+one new entry here plus its own content file — never touching the
+numbers code to do it.
+
+**The homepage renders topics and practice items identically, but
+routes them differently.** `Home.jsx` builds one combined list
+(`[...TOPICS, ...PRACTICE_ITEMS]`) and maps every entry through the
+same `<button className="topic-card">` markup — a student sees no
+visual difference between a topic and a practice card. The only
+branch is the click handler: a topic calls `onOpenTopic(id)` (existing
+behavior); a practice item calls `onOpenPractice(id)`, which sets
+`view: 'practice'` in `App.jsx` instead of `view: 'topic'`. Same
+card, same grid, different destination — the data underneath stays
+genuinely separate even though the surface looks the same.
+
+**`PracticeView.jsx` is the practice equivalent of `TopicView.jsx`.**
+It looks up the clicked item in `PRACTICE_ITEMS` by id, reads its
+`kind`, and renders the matching screen — currently just
+`NumbersPractice.jsx`, which uses the same `.topic-tabs`/`.topic-tab`
+pattern as `TopicView.jsx` and `LanguageHacks.jsx` to switch between
+Flashcards and Quiz. New `kind` values get their own component the
+same way; `PracticeView.jsx` itself should stay a thin lookup-and-
+render switch, not grow feature-specific logic.
+
+**Numbers flashcards reuse the exact flip-card mechanics already
+built** — the same `.flip-card`/`.flip-card-inner`/`.flip-card-face`
+3D-flip CSS and the same `SpeakerButton` used by `TrainingModal.jsx`
+and `ArabicRussianCards.jsx`. Nothing new was invented for "a card
+that flips and can talk" — that pattern gets reused a third time here.
+
+**Deliberately not wired into the global saved-flashcards system.**
+Unlike a dialog's words, numbers aren't something a student picks one
+at a time to save — the whole generated deck is always there to
+browse, closer to Language Hacks than to a topic's flashcards. So
+numbers practice doesn't call `onSaveCard`/`onRemoveCard`, doesn't
+touch Supabase, and doesn't appear in "All Flashcards" or the Train
+All quiz — it's a standalone screen, like Language Hacks, not an
+extension of the saved-word system. If a future practice feature
+*does* want individual saveable items, that's a deliberate product
+decision to make explicitly when it comes up, not something to default
+into by reusing `saveCard` just because it's there.
+
+## 11. Things Not To Do
 
 - **Saved words are tracked globally by word text — one word equals
   one flashcard, no matter how many topics or conversations it appears
