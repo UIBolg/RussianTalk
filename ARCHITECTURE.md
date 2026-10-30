@@ -146,6 +146,19 @@ A simple checklist for "where does my change go?":
    `SpeakerButton` component and the `speak()` function in
    `src/speech.js`. Don't write a new way of talking to the browser's
    narrator.
+7. **Importing content from an outside source (a PDF, a phrasebook)
+   that has standalone reference phrases alongside its dialogues** —
+   phrases nobody in the conversation actually says, just a bare
+   "useful phrases" list? → Fold them into the dialogue as lines someone
+   actually speaks, rather than inventing a new data shape to hold
+   "phrases with no speaker." The `routines` topic (see `data.js`,
+   `topicId: 'routines'`) is the precedent: its source material paired
+   a short 4-line dialogue with a separate table of 5-10 related
+   phrases per scene, and every one of those got rewritten into a
+   natural follow-up line spoken by Friend/Colleague/You, extending
+   each dialogue to 7-16 lines instead of leaving the extra phrases
+   homeless. A dialog's `lines` array is already just a list of
+   speaker turns — it doesn't need a sibling "phrases" field.
 
 ## 3. Naming Conventions
 
