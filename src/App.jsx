@@ -6,11 +6,12 @@ import GlobalFlashcards from './components/GlobalFlashcards.jsx';
 import TrainingModal from './components/TrainingModal.jsx';
 import AccountView from './components/AccountView.jsx';
 import LanguageHacks from './components/LanguageHacks.jsx';
+import WordsThousand from './components/WordsThousand.jsx';
 import { subscribeToAuthChanges } from './auth.js';
 import { addFlashcard, loadFlashcards, removeFlashcard } from './flashcardsApi.js';
 
 export default function App() {
-  const [view, setView] = useState('home'); // 'home' | 'topic' | 'global' | 'account' | 'hacks'
+  const [view, setView] = useState('home'); // 'home' | 'topic' | 'global' | 'account' | 'hacks' | 'words1000'
   const [topicId, setTopicId] = useState(null);
   const [flashcards, setFlashcards] = useState([]);
   const [trainingCards, setTrainingCards] = useState(null);
@@ -82,6 +83,7 @@ export default function App() {
         onFlashcards={() => setView('global')}
         onAccount={() => setView('account')}
         onHacks={() => setView('hacks')}
+        onWords1000={() => setView('words1000')}
       />
       <main>
         {view === 'home' && (
@@ -115,6 +117,7 @@ export default function App() {
         )}
         {view === 'account' && <AccountView session={session} onBack={() => setView('home')} />}
         {view === 'hacks' && <LanguageHacks onBack={() => setView('home')} />}
+        {view === 'words1000' && <WordsThousand onBack={() => setView('home')} />}
       </main>
       {trainingCards && <TrainingModal cards={trainingCards} onClose={() => setTrainingCards(null)} />}
     </div>

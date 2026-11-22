@@ -68,6 +68,16 @@ jobs.
   `DIALOGS` entry — but it follows the exact same rule: this is the
   only file with that content in it, and components only render it.
 
+- **`src/data/words.json`** / **`src/wordsData.js`** — the 1000 Words
+  feature's data: the raw 1,000-word dataset and the small file that
+  turns it into ready-to-use objects plus lookup tables (topic labels,
+  part-of-speech labels, status/gender colors). See "How the 1000
+  Words Section Works" below.
+
+- **`src/wordProgress.js`** — the 1000 Words spaced-repetition engine
+  and its `useWordProgress()` hook: per-word Leitner-box records,
+  notes, and a daily review log, persisted to `localStorage`.
+
 - **`src/components/`** — The staff, each with one job:
   - `TopBar.jsx` — the header bar with the logo and the Flashcards button
   - `Home.jsx` — the grid of topic cards you see first
@@ -97,6 +107,10 @@ jobs.
     `AspectHelper.jsx`, `MotionVerbs.jsx`, `SkeletonBuilder.jsx`,
     `ArabicRussianCards.jsx`, `TopFifteen.jsx`) — see "How the Language
     Hacks Section Works" below.
+  - `WordsThousand.jsx` — the "1000 Words" page shell, same
+    `back-row`/`topic-tab` shape, switching between `WordsBrowse.jsx`,
+    `WordsStudy.jsx`, `WordsListen.jsx`, `WordsProgressDash.jsx` — see
+    "How the 1000 Words Section Works" below.
 
 - **`.github/workflows/deploy.yml`** — The auto-publish robot. Every
   time changes are pushed to `main`, this automatically rebuilds the
@@ -704,52 +718,123 @@ etc.) is naturally rule-based the same way, generate it the same way
 — don't hand-author what a formation function can produce correctly
 every time.
 
-**`practiceItems.js` is a small registry, not the content itself.**
-One entry per practice feature, shaped just enough like a topic
-(`id`, `title`, `ru`, `icon`, `color`) that `Home.jsx` can render it
-with the *exact same* `.topic-card` markup as a real topic — plus one
-extra field, `kind` (e.g. `'numbers'`), that tells the app which
-practice screen to open. Adding a new practice feature later means
-one new entry here plus its own content file — never touching the
-numbers code to do it.
+**`practiceItems.js` would be a small registry, not the content
+itself** — this was the plan sketched out before any practice feature
+actually existed: one entry per feature, shaped like a topic (`id`,
+`title`, `ru`, `icon`, `color`) so `Home.jsx` could render it with the
+same `.topic-card` markup as a real topic, plus a `kind` field a
+`PracticeView.jsx` would switch on. **This never got built — Numbers
+practice (`numberWords.js` in the table above) is still just a plan,
+not code.** The first practice feature that actually shipped, 1000
+Words (see "How the 1000 Words Section Works" below), used a
+different, simpler integration: a nav-bar entry, like 💡 Hacks, not a
+homepage card. If Numbers practice gets built later, give it the same
+nav-tab treatment for consistency, rather than the homepage-card/
+`PracticeView.jsx` router sketched above — don't build two different
+integration patterns for the same content type.
 
-**The homepage renders topics and practice items identically, but
-routes them differently.** `Home.jsx` builds one combined list
-(`[...TOPICS, ...PRACTICE_ITEMS]`) and maps every entry through the
-same `<button className="topic-card">` markup — a student sees no
-visual difference between a topic and a practice card. The only
-branch is the click handler: a topic calls `onOpenTopic(id)` (existing
-behavior); a practice item calls `onOpenPractice(id)`, which sets
-`view: 'practice'` in `App.jsx` instead of `view: 'topic'`. Same
-card, same grid, different destination — the data underneath stays
-genuinely separate even though the surface looks the same.
+**Numbers flashcards would reuse the exact flip-card mechanics
+already built** — the same `.flip-card`/`.flip-card-inner`/
+`.flip-card-face` 3D-flip CSS and the same `SpeakerButton` used by
+`TrainingModal.jsx` and `ArabicRussianCards.jsx`. (1000 Words' Study
+screen already does exactly this — see below.)
 
-**`PracticeView.jsx` is the practice equivalent of `TopicView.jsx`.**
-It looks up the clicked item in `PRACTICE_ITEMS` by id, reads its
-`kind`, and renders the matching screen — currently just
-`NumbersPractice.jsx`, which uses the same `.topic-tabs`/`.topic-tab`
-pattern as `TopicView.jsx` and `LanguageHacks.jsx` to switch between
-Flashcards and Quiz. New `kind` values get their own component the
-same way; `PracticeView.jsx` itself should stay a thin lookup-and-
-render switch, not grow feature-specific logic.
+**Practice content is deliberately not wired into the global
+saved-flashcards system.** Unlike a dialog's words, generated drill
+content isn't something a student picks one at a time to save — the
+whole deck is always there to browse/study, closer to Language Hacks
+than to a topic's flashcards. So practice features don't call
+`onSaveCard`/`onRemoveCard`, don't touch Supabase, and don't appear in
+"All Flashcards" or the Train All quiz — standalone screens with their
+own localStorage, not an extension of the saved-word system. If a
+future practice feature *does* want individual saveable items, that's
+a deliberate product decision to make explicitly when it comes up, not
+something to default into by reusing `saveCard` just because it's
+there.
 
-**Numbers flashcards reuse the exact flip-card mechanics already
-built** — the same `.flip-card`/`.flip-card-inner`/`.flip-card-face`
-3D-flip CSS and the same `SpeakerButton` used by `TrainingModal.jsx`
-and `ArabicRussianCards.jsx`. Nothing new was invented for "a card
-that flips and can talk" — that pattern gets reused a third time here.
+## 10a. How the 1000 Words Section Works
 
-**Deliberately not wired into the global saved-flashcards system.**
-Unlike a dialog's words, numbers aren't something a student picks one
-at a time to save — the whole generated deck is always there to
-browse, closer to Language Hacks than to a topic's flashcards. So
-numbers practice doesn't call `onSaveCard`/`onRemoveCard`, doesn't
-touch Supabase, and doesn't appear in "All Flashcards" or the Train
-All quiz — it's a standalone screen, like Language Hacks, not an
-extension of the saved-word system. If a future practice feature
-*does* want individual saveable items, that's a deliberate product
-decision to make explicitly when it comes up, not something to default
-into by reusing `saveCard` just because it's there.
+"1000 Words" (nav button: "📚 Words", `view === 'words1000'` in
+`App.jsx`) is the first practice feature that actually shipped — a
+full spaced-repetition system for the 1,000 most common Russian words,
+built from a complete external feature spec (a handoff doc + a
+pre-built `words.json` dataset) rather than designed from scratch here.
+Like Language Hacks, it's a nav-level entry with its own tab row
+(Words / Study / Listen / Progress), not a homepage topic card.
+
+**Files:**
+- `src/data/words.json` — the raw 1,000-word dataset (rank, word with
+  stress marks, translation, part of speech, level, gender, topic,
+  aspect), exactly as handed over. This is the one place that data
+  lives; nothing else should hold a second copy of it.
+- `src/wordsData.js` — converts the raw tuples into objects once
+  (adding a `plain` field: stress marks and ё-normalization stripped,
+  for accent-insensitive search) and holds the small lookup tables
+  every screen needs (`TOPIC_LABELS`, `POS_LABELS`, `STATUS_COLORS`,
+  `GENDER_COLORS`, frequency bands, the trip-kit topic list). The
+  status/gender hex colors are kept exactly as specified in the
+  handoff doc's already-tested standalone prototype, the same way
+  `HACK_COLORS` in `languageHacks.js` keeps its own small palette
+  rather than overloading the app's amber/frost/sage tokens.
+- `src/wordProgress.js` — the spaced-repetition engine: a Leitner-style
+  box/due-date record per word (`[box, dueDay, reviews, lapses,
+  starred, lastDay, introducedDay]`), persisted to `localStorage`
+  (`ru1000-progress`) the same try/catch-safe way as `hackProgress.js`.
+  Exposed as a React hook, `useWordProgress()`, because — unlike
+  Language Hacks' per-section localStorage — four sibling screens all
+  need to read and write the *same* live progress object and see each
+  other's changes immediately (answering a card in Study should be
+  reflected in Progress the moment you switch tabs). `WordsThousand.jsx`
+  calls this hook once and passes the result down; no sub-screen reads
+  or writes `localStorage` directly.
+- `src/components/WordsThousand.jsx` — the page shell: `back-row`/title,
+  then the same `.topic-tabs`/`.topic-tab` pattern as `LanguageHacks.jsx`
+  and `TopicView.jsx`, switching between 4 sub-components. Also holds
+  the one piece of cross-tab state the sub-screens can't own
+  individually: a "custom queue" set by the Words screen's "Study
+  these"/"Listen to these" bulk actions, which both sets the deck/
+  playlist for the destination tab *and* switches to it.
+- `WordsBrowse.jsx`, `WordsStudy.jsx`, `WordsListen.jsx`,
+  `WordsProgressDash.jsx` — one file per tab, matching the spec's 4
+  screens (search/filter/browse, SRS flashcards, hands-free audio
+  loop, stats dashboard).
+
+**Study reuses the exact flip-card mechanics already built** — same
+`.flip-card`/`.flip-card-inner`/`.flip-card-face` CSS and the same
+`SpeakerButton` as `TrainingModal.jsx` and `ArabicRussianCards.jsx`.
+One real bug this surfaced: a `SpeakerButton` (itself a `<button>`)
+can't sit inside another `<button>` (invalid HTML, and the browser's
+own click-target resolution gets unpredictable) — `TrainingModal.jsx`
+avoids this because its flip-card face is a plain `<div>`, but
+`WordsBrowse.jsx`'s row was originally a `<button>` too. Fixed by
+making the row a `<div role="button" tabIndex={0}>` with its own
+click/keydown handlers instead. If you add a speaker button inside
+anything else that's already clickable, check what element it's
+sitting inside — it must not be a `<button>`.
+
+**Listen mode got its own new function in `speech.js`,
+`speakWordDrill()`, instead of reusing `speakSequence()`** — per the
+"build playback features as another function in speech.js" rule, but
+a *new* one here because this needs a configurable rate (slow/relaxed/
+normal) and three different pause lengths within one word (Russian →
+0.9s → English → 0.7s → Russian again → 1.5s → next), which
+`speakSequence()`'s single fixed `PAUSE_BETWEEN_SENTENCES_MS` can't
+express. It still funnels through the same `SpeechSynthesisUtterance`
+primitives and the same "only one voice at a time" rule (starting it
+stops any other `speak()`/`speakSequence()` in progress). Pause/resume
+call the browser's own `speechSynthesis.pause()`/`resume()` — known to
+behave inconsistently across browsers, the same honest, unverifiable-
+by-listening-in-this-sandbox limitation documented for the rest of
+audio playback above.
+
+**Deliberately deferred, not built here:** the handoff doc's last
+suggested step — "tapping a word in a dialog bubble should open its
+word card or offer 'Add to study'" — would mean changing
+`ChatPanel.jsx`, which every dialog in the app renders through. That's
+a cross-cutting change touching a sensitive, heavily-used file, so it
+was left as a deliberate follow-up, not bundled into the initial
+build. If you pick this up, treat it as its own reviewed change, not
+a quick addition.
 
 ## 11. Things Not To Do
 

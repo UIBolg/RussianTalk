@@ -177,3 +177,156 @@ export function speakSequence(items, { lang = 'ru-RU', onStepStart, onDone } = {
   playNext();
   return stop;
 }
+
+// Hands-free "Listen" loop for the 1000 Words feature: plays a list of
+// { ru, en } words, each as Russian -> 0.9s pause -> English (optional,
+// parenthetical notes stripped) -> 0.7s pause -> Russian again -> 1.5s
+// pause, then the next word. Built as its own function, per the "build
+// playback features as another small function in speech.js" rule above,
+// because this needs a configurable rate and several different pause
+// lengths within one item - neither speak() nor speakSequence() support
+// that; everything still goes through the same SpeechSynthesisUtterance
+// primitives, and starting this always stops any other speak()/
+// speakSequence() in progress, the same "only one voice at a time" rule.
+//
+// Returns a controller: stop(), pause(), resume(), skip() (next word),
+// back() (previous word). Pause/resume call the browser's own
+// speechSynthesis.pause()/resume() for whichever utterance is mid-flight,
+// and additionally hold off starting the next step during a silent gap -
+// but pause/resume on the Web Speech API is known to behave inconsistently
+// across browsers (the same honest limitation noted elsewhere in this
+// file: this sandbox can't verify by listening, only by inspecting the
+// calls made).
+export function speakWordDrill(words, { rate = 1, includeEnglish = true, onStepStart, onDone } = {}) {
+  const noop = () => {};
+  if (!isSpeechSupported() || !words.length) {
+    onDone?.();
+    return { stop: noop, pause: noop, resume: noop, skip: noop, back: noop };
+  }
+  stopActiveSequence();
+  window.speechSynthesis.cancel();
+
+  let finished = false;
+  let index = 0;
+  let gapTimer = null;
+  let pauseWaiters = null; // null = not paused; otherwise a pending promise's resolver
+
+  function waitGate() {
+    return pauseWaiters ? pauseWaiters.promise : Promise.resolve();
+  }
+
+  function wait(ms) {
+    return new Promise((resolve) => {
+      gapTimer = setTimeout(() => {
+        gapTimer = null;
+        resolve();
+      }, ms);
+    });
+  }
+
+  function speakOne(text, lang) {
+    return new Promise((resolve) => {
+      const utterance = new SpeechSynthesisUtterance(text);
+      utterance.lang = lang;
+      utterance.rate = rate;
+      utterance.onend = resolve;
+      utterance.onerror = resolve;
+      window.speechSynthesis.speak(utterance);
+    });
+  }
+
+  function finish() {
+    if (finished) return;
+    finished = true;
+    if (gapTimer) clearTimeout(gapTimer);
+    if (activeSequenceStop === stop) activeSequenceStop = null;
+    onDone?.();
+  }
+
+  async function runStep(i) {
+    onStepStart?.(i);
+    const { ru, en } = words[i];
+    const cleanEn = (en || '').replace(/\([^)]*\)/g, '').trim();
+
+    await speakOne(ru, 'ru-RU');
+    await waitGate();
+    if (finished || i !== index) return;
+    await wait(900);
+    await waitGate();
+    if (finished || i !== index) return;
+
+    if (includeEnglish && cleanEn) {
+      await speakOne(cleanEn, 'en-US');
+      await waitGate();
+      if (finished || i !== index) return;
+    }
+    await wait(700);
+    await waitGate();
+    if (finished || i !== index) return;
+
+    await speakOne(ru, 'ru-RU');
+    await waitGate();
+    if (finished || i !== index) return;
+    await wait(1500);
+    await waitGate();
+    if (finished || i !== index) return;
+
+    index += 1;
+    play();
+  }
+
+  function play() {
+    if (finished) return;
+    if (index >= words.length) {
+      finish();
+      return;
+    }
+    runStep(index);
+  }
+
+  function stop() {
+    if (finished) return;
+    finish();
+    window.speechSynthesis.cancel();
+  }
+
+  function pause() {
+    if (finished || pauseWaiters) return;
+    window.speechSynthesis.pause();
+    let resolveFn;
+    const promise = new Promise((resolve) => {
+      resolveFn = resolve;
+    });
+    pauseWaiters = { promise, resolve: resolveFn };
+  }
+
+  function resume() {
+    if (finished || !pauseWaiters) return;
+    window.speechSynthesis.resume();
+    pauseWaiters.resolve();
+    pauseWaiters = null;
+  }
+
+  function jumpTo(i) {
+    const clamped = Math.max(0, Math.min(words.length - 1, i));
+    if (gapTimer) {
+      clearTimeout(gapTimer);
+      gapTimer = null;
+    }
+    window.speechSynthesis.cancel();
+    index = clamped;
+    play();
+  }
+
+  function skip() {
+    jumpTo(index + 1);
+  }
+
+  function back() {
+    jumpTo(index - 1);
+  }
+
+  activeSequenceStop = stop;
+  play();
+  return { stop, pause, resume, skip, back };
+}
