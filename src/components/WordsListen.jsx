@@ -50,9 +50,14 @@ export default function WordsListen({ wp, queue, onQueueConsumed }) {
   const [paused, setPaused] = useState(false);
   const [index, setIndex] = useState(0);
   const controllerRef = useRef(null);
+  // A local copy of `queue`, taken the moment it arrives - see the matching
+  // comment in WordsStudy.jsx for why reading the prop directly later
+  // would see it already cleared by the parent's onQueueConsumed().
+  const [customPlaylistQueue, setCustomPlaylistQueue] = useState(null);
 
   useEffect(() => {
     if (queue) {
+      setCustomPlaylistQueue(queue);
       setSource('filters');
       onQueueConsumed();
     }
@@ -60,10 +65,10 @@ export default function WordsListen({ wp, queue, onQueueConsumed }) {
   }, [queue]);
 
   const playlist = useMemo(() => {
-    const ranks = buildPlaylist(source, source === 'filters' ? queue : null, wp);
+    const ranks = buildPlaylist(source, source === 'filters' ? customPlaylistQueue : null, wp);
     return shuffled ? shuffle(ranks) : ranks;
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [source, shuffled, wp.today]);
+  }, [source, customPlaylistQueue, shuffled, wp.today]);
 
   const rate = SPEEDS.find((s) => s.id === speedId).rate;
 
@@ -101,7 +106,7 @@ export default function WordsListen({ wp, queue, onQueueConsumed }) {
     <div className="w1000-listen">
       <div className="w1000-deck-row">
         <button className={`chip ${source === 'week' ? 'active' : ''}`} onClick={() => { stop(); setSource('week'); }}>This week's words</button>
-        {queue && <button className={`chip ${source === 'filters' ? 'active' : ''}`} onClick={() => { stop(); setSource('filters'); }}>Your filtered list</button>}
+        {customPlaylistQueue && <button className={`chip ${source === 'filters' ? 'active' : ''}`} onClick={() => { stop(); setSource('filters'); }}>Your filtered list</button>}
         <button className={`chip ${source === 'new' ? 'active' : ''}`} onClick={() => { stop(); setSource('new'); }}>Today's new words</button>
       </div>
 

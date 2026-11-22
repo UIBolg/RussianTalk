@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { WORDS, WORDS_BY_RANK, POS_LABELS, TOPIC_LABELS } from '../wordsData.js';
 import { INTERVAL, nextDueLabel, statusForRecord } from '../wordProgress.js';
+import { checkSentence } from '../sentenceCheck.js';
 import { speak } from '../speech.js';
 import SpeakerButton from './SpeakerButton.jsx';
 
@@ -78,10 +79,19 @@ export default function WordsStudy({ wp, queue, onQueueConsumed }) {
   const [flipped, setFlipped] = useState(false);
   const [tally, setTally] = useState({ again: 0, good: 0, easy: 0, known: 0 });
   const [autoSpeak, setAutoSpeak] = useState(true);
+  const [sentenceText, setSentenceText] = useState('');
+  const [checkResult, setCheckResult] = useState(null);
+  // A local copy of `queue`, taken the moment it arrives - the shell
+  // (WordsThousand.jsx) clears its own `queue` state in the same effect
+  // tick via onQueueConsumed(), so reading the prop directly inside the
+  // deck memo below would see it already cleared back to null by the time
+  // deckId flips to 'custom' and the memo re-runs.
+  const [customDeckQueue, setCustomDeckQueue] = useState(null);
   const dir = wp.progress.settings.dir ?? 'ru';
 
   useEffect(() => {
     if (queue) {
+      setCustomDeckQueue(queue);
       setDeckId('custom');
       setIndex(0);
       setFlipped(false);
@@ -92,12 +102,12 @@ export default function WordsStudy({ wp, queue, onQueueConsumed }) {
   }, [queue]);
 
   const deck = useMemo(
-    () => buildDeck(deckId, deckId === 'custom' ? queue : null, wp),
+    () => buildDeck(deckId, deckId === 'custom' ? customDeckQueue : null, wp),
     // deckId/wp.today change deliberately rebuild the deck; wp.progress is
     // intentionally excluded so answering a card doesn't reshuffle the
     // deck out from under the session mid-way through.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [deckId, wp.today],
+    [deckId, customDeckQueue, wp.today],
   );
 
   const cards = useMemo(
@@ -109,10 +119,22 @@ export default function WordsStudy({ wp, queue, onQueueConsumed }) {
   const word = current ? WORDS_BY_RANK[current.r] : null;
   const record = current ? wp.getRecord(current.r) : null;
   const done = !cards.length || index >= cards.length;
+  // Only Reviewing-stage words get the "write a sentence" practice step -
+  // New/Learning words haven't been seen enough times yet to productively
+  // write with, and Mastered words don't need the extra friction.
+  const isReviewing = statusForRecord(record) === 'reviewing';
+  const revealed = isReviewing ? !!checkResult : flipped;
 
   useEffect(() => {
     if (word && autoSpeak && !flipped) speak(word.ru);
     // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [word?.r]);
+
+  // Reset the sentence-practice state every time the current card changes,
+  // regardless of why (answering, switching decks, a fresh custom queue).
+  useEffect(() => {
+    setSentenceText('');
+    setCheckResult(null);
   }, [word?.r]);
 
   function selectDeck(id) {
@@ -133,8 +155,11 @@ export default function WordsStudy({ wp, queue, onQueueConsumed }) {
   useEffect(() => {
     function handleKey(e) {
       if (done || !current) return;
-      if (e.code === 'Space') { e.preventDefault(); setFlipped((f) => !f); return; }
-      if (!flipped) return;
+      // Reviewing cards have a textarea to type into - Space must stay a
+      // normal space there, and there's no "flip" concept, just "checked".
+      if (!isReviewing && e.code === 'Space') { e.preventDefault(); setFlipped((f) => !f); return; }
+      if (!revealed) return;
+      if (e.target.tagName === 'TEXTAREA') return;
       if (e.key === '1') answer('again');
       else if (e.key === '2') answer('good');
       else if (e.key === '3') answer('easy');
@@ -143,7 +168,7 @@ export default function WordsStudy({ wp, queue, onQueueConsumed }) {
     window.addEventListener('keydown', handleKey);
     return () => window.removeEventListener('keydown', handleKey);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [flipped, current, done]);
+  }, [flipped, revealed, isReviewing, current, done]);
 
   const dueTomorrow = useMemo(() => {
     const tomorrow = wp.today + 1;
@@ -191,31 +216,73 @@ export default function WordsStudy({ wp, queue, onQueueConsumed }) {
             <div className="fill" style={{ width: `${(index / cards.length) * 100}%` }} />
           </div>
 
-          <div className={`flip-card ${flipped ? 'flipped' : ''}`} onClick={() => setFlipped((f) => !f)}>
-            <div className="flip-card-inner">
-              <div className="flip-card-face flip-card-front">
-                <span className="side-label">{current.frontIsRu ? 'Russian' : 'English'}</span>
-                <div className="main-word">{current.frontIsRu ? word.ru : word.en}</div>
-                {current.frontIsRu && (
-                  <SpeakerButton text={word.ru} label={`Play "${word.ru}"`} className="train-speak-btn" />
-                )}
-                <div className="w1000-card-meta">
-                  #{word.r} · {POS_LABELS[word.pos]}{word.g ? ` · ${word.g}` : ''} · {statusForRecord(record)} · {cards.length - index} left
-                </div>
-                <div className="flip-hint">Tap or press Space to flip</div>
+          {isReviewing ? (
+            <div className="w1000-sentence-practice">
+              <div className="w1000-card-meta">
+                #{word.r} · {POS_LABELS[word.pos]}{word.g ? ` · ${word.g}` : ''} · reviewing · {cards.length - index} left
               </div>
-              <div className="flip-card-face flip-card-back">
-                <span className="side-label">{current.frontIsRu ? 'English' : 'Russian'}</span>
-                <div className="main-word">{current.frontIsRu ? word.en : word.ru}</div>
-                <div className="w1000-card-meta">
-                  {word.asp ? `${word.asp} · ` : ''}{TOPIC_LABELS[word.t]} · {word.lv}
+              <div className="w1000-sentence-prompt">
+                Write a sentence using <strong>{word.ru}</strong>
+                <SpeakerButton text={word.ru} label={`Play "${word.ru}"`} />
+              </div>
+              <textarea
+                className="w1000-sentence-input"
+                placeholder="Напишите предложение…"
+                value={sentenceText}
+                onChange={(e) => setSentenceText(e.target.value)}
+                disabled={!!checkResult}
+                rows={3}
+              />
+              {!checkResult ? (
+                <button
+                  className="account-btn"
+                  disabled={!sentenceText.trim()}
+                  onClick={() => setCheckResult(checkSentence(sentenceText, word.ru))}
+                >
+                  Check sentence
+                </button>
+              ) : (
+                <div className={`w1000-sentence-feedback ${checkResult.ok ? 'ok' : 'needs-work'}`}>
+                  {checkResult.ok ? '✓' : '⚠'} {checkResult.message}
                 </div>
-                {wp.progress.notes[word.r] && <div className="w1000-card-note">📝 {wp.progress.notes[word.r]}</div>}
+              )}
+              <p className="w1000-sentence-disclaimer">
+                This only checks that you used the word — it doesn't check grammar.
+              </p>
+              {checkResult && (
+                <div className="w1000-card-translation">
+                  {word.en}
+                  {wp.progress.notes[word.r] && <span className="w1000-card-note-inline">📝 {wp.progress.notes[word.r]}</span>}
+                </div>
+              )}
+            </div>
+          ) : (
+            <div className={`flip-card ${flipped ? 'flipped' : ''}`} onClick={() => setFlipped((f) => !f)}>
+              <div className="flip-card-inner">
+                <div className="flip-card-face flip-card-front">
+                  <span className="side-label">{current.frontIsRu ? 'Russian' : 'English'}</span>
+                  <div className="main-word">{current.frontIsRu ? word.ru : word.en}</div>
+                  {current.frontIsRu && (
+                    <SpeakerButton text={word.ru} label={`Play "${word.ru}"`} className="train-speak-btn" />
+                  )}
+                  <div className="w1000-card-meta">
+                    #{word.r} · {POS_LABELS[word.pos]}{word.g ? ` · ${word.g}` : ''} · {statusForRecord(record)} · {cards.length - index} left
+                  </div>
+                  <div className="flip-hint">Tap or press Space to flip</div>
+                </div>
+                <div className="flip-card-face flip-card-back">
+                  <span className="side-label">{current.frontIsRu ? 'English' : 'Russian'}</span>
+                  <div className="main-word">{current.frontIsRu ? word.en : word.ru}</div>
+                  <div className="w1000-card-meta">
+                    {word.asp ? `${word.asp} · ` : ''}{TOPIC_LABELS[word.t]} · {word.lv}
+                  </div>
+                  {wp.progress.notes[word.r] && <div className="w1000-card-note">📝 {wp.progress.notes[word.r]}</div>}
+                </div>
               </div>
             </div>
-          </div>
+          )}
 
-          {flipped && (
+          {revealed && (
             <>
               <div className="train-controls w1000-answer-row">
                 <button className="btn-again" onClick={() => answer('again')}>

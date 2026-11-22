@@ -764,6 +764,35 @@ main{flex:1; padding:24px;}
   font-size:13px; text-decoration:underline; cursor:pointer;
 }
 
+/* Sentence-practice card (Reviewing-stage words) */
+.w1000-sentence-practice{
+  background:var(--paper); border:1px solid var(--line); border-radius:var(--radius);
+  padding:20px; box-shadow:var(--shadow); text-align:center;
+}
+.w1000-sentence-prompt{
+  font-family:'Poppins',sans-serif; font-size:19px; margin:8px 0 4px;
+  display:flex; align-items:center; justify-content:center; gap:8px; flex-wrap:wrap;
+}
+.w1000-sentence-input{
+  width:100%; margin-top:12px; padding:10px 12px; border:1px solid var(--line);
+  border-radius:10px; font-family:inherit; font-size:15px; resize:vertical;
+}
+.w1000-sentence-input:disabled{ background:var(--paper-2); color:var(--ink-soft); }
+.w1000-sentence-feedback{
+  margin-top:12px; padding:10px 14px; border-radius:10px; font-size:13px; text-align:left;
+}
+.w1000-sentence-feedback.ok{ background:var(--sage-tint); color:var(--ink); }
+.w1000-sentence-feedback.needs-work{ background:var(--amber-tint); color:var(--ink); }
+.w1000-sentence-disclaimer{ margin:10px 0 0; font-size:11px; color:var(--ink-soft); font-style:italic; }
+.w1000-card-translation{
+  margin-top:14px; padding-top:14px; border-top:1px solid var(--line);
+  font-family:'Poppins',sans-serif; font-size:18px;
+}
+.w1000-card-note-inline{
+  display:block; margin-top:8px; font-family:inherit; font-size:12px;
+  background:var(--amber-tint); border-radius:8px; padding:6px 10px;
+}
+
 /* Listen screen */
 .w1000-listen-card{
   text-align:center; background:var(--paper); border:1px solid var(--line); border-radius:var(--radius);

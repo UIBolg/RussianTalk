@@ -4,7 +4,7 @@ import rawWords from './data/words.json';
 // to е, so search works whether or not a student types the accent - the
 // same idea as the rest of the app treating "please" as one word no matter
 // where it's typed from.
-function strip(s) {
+export function strip(s) {
   return s.replace(/́/g, '').toLowerCase().replace(/ё/g, 'е');
 }
 

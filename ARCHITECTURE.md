@@ -854,6 +854,48 @@ was left as a deliberate follow-up, not bundled into the initial
 build. If you pick this up, treat it as its own reviewed change, not
 a quick addition.
 
+**Reviewing-stage words get a "write a sentence" step instead of the
+flip card** (`src/sentenceCheck.js`, wired into `WordsStudy.jsx`). New
+and Learning words haven't been seen enough times to productively
+write with yet, and Mastered words don't need the extra friction, so
+this only replaces the flip card when `statusForRecord(record) ===
+'reviewing'`. **Be honest about what `checkSentence()` actually is: a
+"did you use the word" check, not a grammar checker.** It strips
+stress marks the same way search does, truncates the target word to a
+stem (more letters trimmed for longer words, to tolerate case/tense
+endings), and checks whether any word in the submitted sentence starts
+with that stem, plus a basic "is this actually a sentence, not just
+the bare word" length check. It cannot catch wrong case endings, word
+order, or verb conjugation — the UI says so directly
+(`.w1000-sentence-disclaimer`), and this was a deliberate, asked-for
+scope choice over the alternatives (a free grammar-checking API, or an
+AI-backed check needing a paid API key and a backend to hold it
+safely) — see the comment at the top of `sentenceCheck.js` before
+reaching for something heavier here.
+
+The grading buttons (Again/Good/Easy/"I already know this word")
+still work exactly the same after a sentence check as after a flip —
+the check is a practice rep and a confidence signal, not an
+auto-grader; the student still self-assesses, same as every other
+card.
+
+**A real bug this surfaced and fixed, in code that predates this
+feature:** `WordsStudy.jsx`'s and `WordsListen.jsx`'s "Study these"/
+"Listen to these" custom-queue handoff from `WordsBrowse.jsx` was
+silently falling back to the default deck/playlist. The shell
+(`WordsThousand.jsx`) passes a `queue` prop and clears its own copy via
+`onQueueConsumed()` in the same effect that the receiving screen uses
+to switch into custom-deck mode — both state updates land in the same
+render batch, so by the time the deck/playlist `useMemo` actually
+re-ran (triggered by `deckId`/`source` changing), the `queue` prop
+it closed over had already gone back to `null`. Fixed by copying
+`queue` into the receiving screen's own local state the instant it
+arrives, before calling `onQueueConsumed()`, and reading from that
+local copy everywhere after — never the prop. If you add a third
+screen that receives a one-shot queue/selection this same way, copy it
+into local state the same way; don't read the prop again after the
+handoff effect.
+
 ## 11. Things Not To Do
 
 - **Saved words are tracked globally by word text — one word equals
