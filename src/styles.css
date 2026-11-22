@@ -86,9 +86,10 @@ main{flex:1; padding:24px;}
 .home-head h1{font-size:26px; margin:0 0 4px;}
 .home-head p{margin:0; color:var(--ink-soft); font-size:15px;}
 
+.home-widgets{ display:flex; flex-direction:column; gap:14px; margin-bottom:20px; }
 .word-widget{
   background:var(--paper); border:1px solid var(--line); border-radius:var(--radius);
-  padding:18px 20px; box-shadow:var(--shadow); cursor:pointer; margin-bottom:20px;
+  padding:18px 20px; box-shadow:var(--shadow); cursor:pointer;
   transition:transform .12s ease;
 }
 .word-widget:hover{ transform:translateY(-2px); }

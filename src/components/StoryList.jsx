@@ -1,12 +1,6 @@
 import { useMemo, useState } from 'react';
-import { STORIES, STORY_LEVELS } from '../storiesData.js';
+import { STORIES, STORY_LEVELS, knownPercent } from '../storiesData.js';
 import { TOPIC_LABELS } from '../wordsData.js';
-
-function knownPercent(story, wp) {
-  if (!story.listWords.length) return 100;
-  const known = story.listWords.filter((r) => wp.status(r) !== 'new').length;
-  return Math.round((known / story.listWords.length) * 100);
-}
 
 function badgeFor(storyId, wp) {
   const sp = wp.getStoryProgress(storyId);

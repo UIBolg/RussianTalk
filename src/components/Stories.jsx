@@ -10,9 +10,9 @@ import StoryQuiz from './StoryQuiz.jsx';
 // storyId instead, closer to how TopicView.jsx nests a dialog inside a
 // topic. useWordProgress() is called once here, the same shared engine
 // and localStorage object 1000 Words uses, per the handoff doc.
-export default function Stories({ onBack }) {
-  const [view, setView] = useState('list');
-  const [storyId, setStoryId] = useState(null);
+export default function Stories({ onBack, initialStoryId }) {
+  const [view, setView] = useState(initialStoryId ? 'reader' : 'list');
+  const [storyId, setStoryId] = useState(initialStoryId ?? null);
   const wp = useWordProgress();
 
   return (

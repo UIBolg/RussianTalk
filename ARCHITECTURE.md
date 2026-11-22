@@ -842,6 +842,26 @@ homepage practice-card idea in section 10. The 📚 Words nav button
 still exists too — the widget is an added on-ramp, not a replacement
 for direct access.
 
+**Two more homepage widgets followed the exact same shape:**
+`TopicsWidget.jsx` (suggests one topic to explore — the first with
+dialogs and no saved words yet, or the least-explored one by
+saved-words-per-dialog ratio if every topic's been started) and
+`StoryWidget.jsx` (suggests the next unread story in list order, or a
+day-rotating pick once all 30 are read — see `pickSuggestedStory()` in
+`storiesData.js`). All three widgets now live together in `Home.jsx`
+inside one `.home-widgets` wrapper, each independently reading its own
+progress and each ending in the same "one card, one clear next
+action" shape: a click anywhere opens the relevant section, the CTA
+button jumps straight to the suggested thing. `knownPercent()` (used
+by both `StoryWidget.jsx` and `StoryList.jsx`'s cards) lives in
+`storiesData.js` for the same reason `cardsForTopic()` lives in
+`selectors.js` — one calculation, not a copy per screen that shows it.
+`Stories.jsx` gained an `initialStoryId` prop (consumed once at mount,
+same pattern as `WordsThousand.jsx`'s `initialTab`) so `StoryWidget`'s
+CTA can open straight into that story's reader, skipping the list —
+but the plain 📖 Stories nav button still resets to the list, so direct
+access isn't hijacked by whatever the homepage last suggested.
+
 **Listen mode got its own new function in `speech.js`,
 `speakWordDrill()`, instead of reusing `speakSequence()`** — per the
 "build playback features as another function in speech.js" rule, but
