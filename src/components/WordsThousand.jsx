@@ -17,8 +17,8 @@ const TABS = [
 // same shape as LanguageHacks.jsx. useWordProgress() is called once here
 // and handed down, so every sub-screen reads and writes the same shared
 // progress object instead of each keeping its own copy.
-export default function WordsThousand({ onBack }) {
-  const [tab, setTab] = useState('browse');
+export default function WordsThousand({ onBack, initialTab }) {
+  const [tab, setTab] = useState(initialTab || 'browse');
   // Set by WordsBrowse's "Study these" / "Listen to these" bulk actions -
   // a list of ranks to use instead of that screen's own default deck, for
   // exactly one visit to that tab.

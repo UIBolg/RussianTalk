@@ -86,6 +86,40 @@ main{flex:1; padding:24px;}
 .home-head h1{font-size:26px; margin:0 0 4px;}
 .home-head p{margin:0; color:var(--ink-soft); font-size:15px;}
 
+.word-widget{
+  background:var(--paper); border:1px solid var(--line); border-radius:var(--radius);
+  padding:18px 20px; box-shadow:var(--shadow); cursor:pointer; margin-bottom:20px;
+  transition:transform .12s ease;
+}
+.word-widget:hover{ transform:translateY(-2px); }
+.word-widget-head{ display:flex; align-items:center; gap:14px; }
+.word-widget-icon{
+  font-size:26px; width:48px; height:48px; border-radius:12px; background:var(--amber-tint);
+  display:flex; align-items:center; justify-content:center; flex-shrink:0;
+}
+.word-widget-titles{ flex:1; min-width:0; }
+.word-widget-titles h3{ margin:0 0 2px; font-size:17px; }
+.word-widget-titles p{ margin:0; font-size:13px; color:var(--ink-soft); }
+.word-widget-stat{ text-align:right; flex-shrink:0; }
+.word-widget-stat .num{ font-family:'Poppins',sans-serif; font-size:22px; font-weight:500; }
+.word-widget-stat .of{ font-size:13px; color:var(--ink-soft); }
+.word-widget-stat .label{ display:block; font-size:11px; color:var(--ink-soft); }
+.word-widget-bar{ height:7px; border-radius:999px; background:var(--paper-2); overflow:hidden; margin:14px 0 12px; }
+.word-widget-bar .fill{ height:100%; background:var(--amber); border-radius:999px; }
+.word-widget-footer{ display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; }
+.word-widget-hint{ font-size:12px; color:var(--ink-soft); }
+.word-widget-cta{
+  background:var(--amber); color:var(--paper); border:none; border-radius:999px;
+  padding:10px 18px; font-family:inherit; font-weight:500; font-size:13px; cursor:pointer;
+  white-space:nowrap;
+}
+@media (max-width:480px){
+  .word-widget-head{ flex-wrap:wrap; }
+  .word-widget-stat{ text-align:left; }
+  .word-widget-footer{ flex-direction:column; align-items:stretch; }
+  .word-widget-cta{ width:100%; }
+}
+
 .topic-grid{
   display:grid;
   grid-template-columns:repeat(auto-fill, minmax(220px,1fr));

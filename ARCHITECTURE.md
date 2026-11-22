@@ -812,6 +812,24 @@ click/keydown handlers instead. If you add a speaker button inside
 anything else that's already clickable, check what element it's
 sitting inside — it must not be a `<button>`.
 
+**`WordsWidget.jsx` puts a live progress banner on the homepage,
+above the topic grid** — the whole point of 1000 Words is daily spaced
+repetition, so unlike Language Hacks it needed a nudge on the very
+first screen, not just a nav button. It calls `useWordProgress()`
+itself (a second, independent instance of the same hook — safe,
+since `WordsThousand.jsx` isn't mounted at the same time) to show
+live mastered-count/1000, a progress bar, the day streak, and one
+adaptive call-to-action button whose label changes with state ("Start
+learning your first 10 words" → "Review N words due today" → "Learn
+your next 10 words"). Tapping the button jumps straight into a ready
+Study session (via `App.jsx`'s `wordsInitialTab` state, passed to
+`WordsThousand.jsx` as `initialTab` and consumed once at mount);
+tapping anywhere else on the widget opens the Words (browse) tab
+instead, the same two-destinations-one-card split used for the
+homepage practice-card idea in section 10. The 📚 Words nav button
+still exists too — the widget is an added on-ramp, not a replacement
+for direct access.
+
 **Listen mode got its own new function in `speech.js`,
 `speakWordDrill()`, instead of reusing `speakSequence()`** — per the
 "build playback features as another function in speech.js" rule, but
