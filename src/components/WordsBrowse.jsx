@@ -42,6 +42,7 @@ export default function WordsBrowse({ wp, onStudyThese, onListenThese }) {
   const [expanded, setExpanded] = useState(new Set());
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
   const [confirmingKnown, setConfirmingKnown] = useState(false);
+  const [filtersOpen, setFiltersOpen] = useState(false);
 
   function patchFilters(patch) {
     setFilters((prev) => ({ ...prev, ...patch }));
@@ -148,6 +149,23 @@ export default function WordsBrowse({ wp, onStudyThese, onListenThese }) {
   const visible = filtered.slice(0, visibleCount);
   const filteredRanks = useMemo(() => filtered.map((w) => w.r), [filtered]);
 
+  // How many filter choices are currently narrowing the list, beyond the
+  // search box - shown as a badge on the collapsed filter toggle so it's
+  // obvious filters are doing something even while the panel is closed.
+  const activeFilterCount = useMemo(() => {
+    let count = filters.pos.size;
+    if (filters.quickSet) count += 1;
+    if (filters.topic !== 'all') count += 1;
+    if (filters.level !== 'all') count += 1;
+    if (filters.status !== 'all') count += 1;
+    if (filters.band !== 'all') count += 1;
+    if (filters.gender !== 'all') count += 1;
+    if (filters.aspect !== 'all') count += 1;
+    if (filters.starredOnly) count += 1;
+    if (filters.hasNoteOnly) count += 1;
+    return count;
+  }, [filters]);
+
   return (
     <div className="w1000-browse">
       <div className="w1000-search-row">
@@ -158,72 +176,88 @@ export default function WordsBrowse({ wp, onStudyThese, onListenThese }) {
           value={filters.search}
           onChange={(e) => patchFilters({ search: e.target.value })}
         />
-        <button className="chip" onClick={() => { setFilters(emptyFilters()); setSort('frequency'); setVisibleCount(PAGE_SIZE); }}>
-          Clear filters
+        <button
+          className={`w1000-filter-toggle ${filtersOpen ? 'active' : ''}`}
+          onClick={() => setFiltersOpen((o) => !o)}
+          aria-expanded={filtersOpen}
+          aria-label={filtersOpen ? 'Hide filters' : 'Show filters'}
+          title={filtersOpen ? 'Hide filters' : 'Show filters'}
+        >
+          ⚙️
+          {activeFilterCount > 0 && <span className="w1000-filter-badge">{activeFilterCount}</span>}
         </button>
       </div>
 
-      <div className="w1000-quick-sets">
-        <button className={`chip ${filters.quickSet === 'trip-kit' ? 'active' : ''}`} onClick={() => applyQuickSet('trip-kit')}>🧳 Trip kit</button>
-        <button className={`chip ${filters.quickSet === 'top-100' ? 'active' : ''}`} onClick={() => applyQuickSet('top-100')}>🔝 Top 100</button>
-        <button className={`chip ${filters.quickSet === 'aspect-pairs' ? 'active' : ''}`} onClick={() => applyQuickSet('aspect-pairs')}>🔁 Verb aspect pairs</button>
-        <button className={`chip ${filters.quickSet === 'hard' ? 'active' : ''}`} onClick={() => applyQuickSet('hard')}>⚠️ My hard words</button>
-      </div>
+      {filtersOpen && (
+        <div className="w1000-filters-panel">
+          <div className="w1000-quick-sets">
+            <button className={`chip ${filters.quickSet === 'trip-kit' ? 'active' : ''}`} onClick={() => applyQuickSet('trip-kit')}>🧳 Trip kit</button>
+            <button className={`chip ${filters.quickSet === 'top-100' ? 'active' : ''}`} onClick={() => applyQuickSet('top-100')}>🔝 Top 100</button>
+            <button className={`chip ${filters.quickSet === 'aspect-pairs' ? 'active' : ''}`} onClick={() => applyQuickSet('aspect-pairs')}>🔁 Verb aspect pairs</button>
+            <button className={`chip ${filters.quickSet === 'hard' ? 'active' : ''}`} onClick={() => applyQuickSet('hard')}>⚠️ My hard words</button>
+          </div>
 
-      <div className="w1000-pos-chips">
-        {Object.entries(POS_LABELS).map(([code, label]) => (
-          <button
-            key={code}
-            className={`chip ${filters.pos.has(code) ? 'active' : ''}`}
-            onClick={() => togglePos(code)}
-          >
-            {label} <span className="count">{posCounts[code] || 0}</span>
-          </button>
-        ))}
-      </div>
+          <div className="w1000-pos-chips">
+            {Object.entries(POS_LABELS).map(([code, label]) => (
+              <button
+                key={code}
+                className={`chip ${filters.pos.has(code) ? 'active' : ''}`}
+                onClick={() => togglePos(code)}
+              >
+                {label} <span className="count">{posCounts[code] || 0}</span>
+              </button>
+            ))}
+          </div>
 
-      <div className="w1000-dropdown-row">
-        <select value={filters.topic} onChange={(e) => patchFilters({ topic: e.target.value })}>
-          <option value="all">All topics</option>
-          {Object.entries(TOPIC_LABELS).map(([code, label]) => (
-            <option key={code} value={code}>{label} ({topicCounts[code] || 0})</option>
-          ))}
-        </select>
-        <select value={filters.level} onChange={(e) => patchFilters({ level: e.target.value })}>
-          <option value="all">All levels</option>
-          {LEVELS.map((lv) => <option key={lv} value={lv}>{lv}</option>)}
-        </select>
-        <select value={filters.status} onChange={(e) => patchFilters({ status: e.target.value })}>
-          {STATUS_FILTERS.map((s) => <option key={s.id} value={s.id}>{s.label}</option>)}
-        </select>
-        <select value={filters.band} onChange={(e) => patchFilters({ band: e.target.value })}>
-          <option value="all">All frequency bands</option>
-          {FREQUENCY_BANDS.map((b) => <option key={b.id} value={b.id}>{b.label}</option>)}
-        </select>
-        <select value={filters.gender} onChange={(e) => patchFilters({ gender: e.target.value })}>
-          <option value="all">Any gender</option>
-          {Object.entries(GENDER_LABELS).map(([code, label]) => <option key={code} value={code}>{label}</option>)}
-        </select>
-        <select value={filters.aspect} onChange={(e) => patchFilters({ aspect: e.target.value })}>
-          <option value="all">Any aspect</option>
-          <option value="pf">Perfective</option>
-          <option value="ipf">Imperfective</option>
-        </select>
-        <select value={sort} onChange={(e) => setSort(e.target.value)}>
-          {SORTS.map((s) => <option key={s.id} value={s.id}>Sort: {s.label}</option>)}
-        </select>
-      </div>
+          <div className="w1000-dropdown-row">
+            <select value={filters.topic} onChange={(e) => patchFilters({ topic: e.target.value })}>
+              <option value="all">All topics</option>
+              {Object.entries(TOPIC_LABELS).map(([code, label]) => (
+                <option key={code} value={code}>{label} ({topicCounts[code] || 0})</option>
+              ))}
+            </select>
+            <select value={filters.level} onChange={(e) => patchFilters({ level: e.target.value })}>
+              <option value="all">All levels</option>
+              {LEVELS.map((lv) => <option key={lv} value={lv}>{lv}</option>)}
+            </select>
+            <select value={filters.status} onChange={(e) => patchFilters({ status: e.target.value })}>
+              {STATUS_FILTERS.map((s) => <option key={s.id} value={s.id}>{s.label}</option>)}
+            </select>
+            <select value={filters.band} onChange={(e) => patchFilters({ band: e.target.value })}>
+              <option value="all">All frequency bands</option>
+              {FREQUENCY_BANDS.map((b) => <option key={b.id} value={b.id}>{b.label}</option>)}
+            </select>
+            <select value={filters.gender} onChange={(e) => patchFilters({ gender: e.target.value })}>
+              <option value="all">Any gender</option>
+              {Object.entries(GENDER_LABELS).map(([code, label]) => <option key={code} value={code}>{label}</option>)}
+            </select>
+            <select value={filters.aspect} onChange={(e) => patchFilters({ aspect: e.target.value })}>
+              <option value="all">Any aspect</option>
+              <option value="pf">Perfective</option>
+              <option value="ipf">Imperfective</option>
+            </select>
+            <select value={sort} onChange={(e) => setSort(e.target.value)}>
+              {SORTS.map((s) => <option key={s.id} value={s.id}>Sort: {s.label}</option>)}
+            </select>
+          </div>
 
-      <div className="w1000-toggle-row">
-        <label className="w1000-toggle">
-          <input type="checkbox" checked={filters.starredOnly} onChange={(e) => patchFilters({ starredOnly: e.target.checked })} />
-          ⭐ Starred
-        </label>
-        <label className="w1000-toggle">
-          <input type="checkbox" checked={filters.hasNoteOnly} onChange={(e) => patchFilters({ hasNoteOnly: e.target.checked })} />
-          📝 Has my note
-        </label>
-      </div>
+          <div className="w1000-toggle-row">
+            <label className="w1000-toggle">
+              <input type="checkbox" checked={filters.starredOnly} onChange={(e) => patchFilters({ starredOnly: e.target.checked })} />
+              ⭐ Starred
+            </label>
+            <label className="w1000-toggle">
+              <input type="checkbox" checked={filters.hasNoteOnly} onChange={(e) => patchFilters({ hasNoteOnly: e.target.checked })} />
+              📝 Has my note
+            </label>
+            {activeFilterCount > 0 && (
+              <button className="chip w1000-clear-filters" onClick={() => { setFilters(emptyFilters()); setSort('frequency'); setVisibleCount(PAGE_SIZE); }}>
+                Clear filters
+              </button>
+            )}
+          </div>
+        </div>
+      )}
 
       <div className="w1000-results-bar">
         <span>{filtered.length} word{filtered.length === 1 ? '' : 's'}</span>
