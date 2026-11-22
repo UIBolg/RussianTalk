@@ -19,12 +19,12 @@ html,body{margin:0;padding:0;}
 body{
   background:var(--bg);
   color:var(--ink);
-  font-family:'Poppins', sans-serif;
+  font-family:Arial, Helvetica, sans-serif;
   font-size:16px;
   line-height:1.5;
   -webkit-font-smoothing:antialiased;
 }
-h1,h2,h3,.display{font-family:'Poppins', sans-serif; font-weight:500;}
+h1,h2,h3,.display{font-family:Arial, Helvetica, sans-serif; font-weight:500;}
 button{font-family:inherit;}
 :focus-visible{outline:2px solid var(--frost); outline-offset:2px;}
 
@@ -56,9 +56,9 @@ button{font-family:inherit;}
   background:var(--amber);
   color:var(--paper);
   display:flex;align-items:center;justify-content:center;
-  font-family:'Poppins',sans-serif; font-weight:500; font-size:18px;
+  font-family:Arial, Helvetica, sans-serif; font-weight:500; font-size:18px;
 }
-.brand .name{font-family:'Poppins',sans-serif; font-weight:500; font-size:20px; color:var(--ink);}
+.brand .name{font-family:Arial, Helvetica, sans-serif; font-weight:500; font-size:20px; color:var(--ink);}
 .brand .tag{font-size:12px; color:var(--ink-soft); display:block; margin-top:-2px;}
 .nav-actions{display:flex; gap:8px;}
 @media (max-width:480px){
@@ -101,7 +101,7 @@ main{flex:1; padding:24px;}
 .word-widget-titles h3{ margin:0 0 2px; font-size:17px; }
 .word-widget-titles p{ margin:0; font-size:13px; color:var(--ink-soft); }
 .word-widget-stat{ text-align:right; flex-shrink:0; }
-.word-widget-stat .num{ font-family:'Poppins',sans-serif; font-size:22px; font-weight:500; }
+.word-widget-stat .num{ font-family:Arial, Helvetica, sans-serif; font-size:22px; font-weight:500; }
 .word-widget-stat .of{ font-size:13px; color:var(--ink-soft); }
 .word-widget-stat .label{ display:block; font-size:11px; color:var(--ink-soft); }
 .word-widget-bar{ height:7px; border-radius:999px; background:var(--paper-2); overflow:hidden; margin:14px 0 12px; }
@@ -348,7 +348,7 @@ main{flex:1; padding:24px;}
 }
 .ticket .card-type.is-word{ background:var(--frost-tint); color:var(--frost); }
 .ticket .card-type.is-sentence{ background:var(--sage-tint); color:var(--sage); }
-.ticket .word{ display:block; border:none; padding:14px 0 4px; font-family:'Poppins',sans-serif; font-size:18px; cursor:default; }
+.ticket .word{ display:block; border:none; padding:14px 0 4px; font-family:Arial, Helvetica, sans-serif; font-size:18px; cursor:default; }
 .ticket .tr{ font-size:12.5px; color:var(--ink-soft); }
 
 /* ===== Training modal ===== */
@@ -381,7 +381,7 @@ main{flex:1; padding:24px;}
   position:absolute; top:12px; left:14px; font-size:10px; text-transform:uppercase;
   letter-spacing:.05em; color:var(--ink-soft); font-weight:500;
 }
-.flip-card .main-word{ font-family:'Poppins',sans-serif; font-size:26px; margin-top:10px; text-align:center; }
+.flip-card .main-word{ font-family:Arial, Helvetica, sans-serif; font-size:26px; margin-top:10px; text-align:center; }
 .train-speak-btn{ font-size:20px; margin-top:12px; }
 .flip-hint{ font-size:12px; color:var(--ink-soft); margin-top:10px; }
 
@@ -493,7 +493,7 @@ main{flex:1; padding:24px;}
   background:var(--ink); color:var(--paper); border-radius:var(--radius);
   padding:14px 22px; text-align:center; box-shadow:var(--shadow);
 }
-.root-tree-root-word{ display:block; font-family:'Poppins',sans-serif; font-size:22px; font-weight:500; margin-top:6px; }
+.root-tree-root-word{ display:block; font-family:Arial, Helvetica, sans-serif; font-size:22px; font-weight:500; margin-top:6px; }
 .root-tree-root-meaning{ display:block; font-size:12px; opacity:.75; margin-top:2px; }
 .root-tree-branches{
   display:grid; grid-template-columns:repeat(auto-fill, minmax(180px,1fr)); gap:12px; width:100%;
@@ -510,7 +510,7 @@ main{flex:1; padding:24px;}
 .root-tree-prefix{
   color:var(--paper); font-size:11px; font-weight:500; border-radius:999px; padding:2px 8px;
 }
-.root-tree-word{ font-family:'Poppins',sans-serif; font-weight:500; font-size:15px; color:var(--ink); }
+.root-tree-word{ font-family:Arial, Helvetica, sans-serif; font-weight:500; font-size:15px; color:var(--ink); }
 .root-tree-tr{ font-size:12px; color:var(--ink-soft); }
 .root-tree-guess-prompt{ font-size:11.5px; color:var(--ink-soft); font-style:italic; }
 .root-tree-breakdown{
@@ -527,7 +527,7 @@ main{flex:1; padding:24px;}
   display:flex; flex-direction:column; gap:8px; width:100%;
 }
 .prefix-card-top{ display:flex; justify-content:space-between; align-items:center; }
-.prefix-card-prefix{ font-family:'Poppins',sans-serif; font-weight:500; font-size:17px; }
+.prefix-card-prefix{ font-family:Arial, Helvetica, sans-serif; font-weight:500; font-size:17px; }
 .prefix-card-arrow{ font-size:16px; }
 .prefix-card-scene{ font-size:12px; color:var(--ink-soft); line-height:1.4; }
 .prefix-card-guess{ font-size:11.5px; color:var(--ink-soft); font-style:italic; }
@@ -550,7 +550,7 @@ main{flex:1; padding:24px;}
   display:inline-flex; align-items:center; justify-content:center; width:26px; height:26px;
   border-radius:50%; font-size:14px; flex-shrink:0;
 }
-.case-card-persona-name{ font-family:'Poppins',sans-serif; font-weight:500; font-size:13.5px; color:var(--ink); }
+.case-card-persona-name{ font-family:Arial, Helvetica, sans-serif; font-weight:500; font-size:13.5px; color:var(--ink); }
 .case-card-joke{ font-size:12px; color:var(--ink-soft); font-style:italic; margin:0 0 10px; }
 .case-card-head{ display:flex; justify-content:space-between; align-items:baseline; font-weight:500; padding-top:8px; border-top:1px dashed var(--line); }
 .case-card.large .case-card-name{ font-size:17px; }
@@ -577,7 +577,7 @@ main{flex:1; padding:24px;}
   border:none; background:var(--frost); color:var(--paper); border-radius:999px;
   padding:10px 24px; font-weight:500; font-size:14px; cursor:pointer; min-height:44px; min-width:90px;
 }
-.aspect-result-label{ font-family:'Poppins',sans-serif; font-weight:500; font-size:17px; color:var(--ink); margin-top:10px; }
+.aspect-result-label{ font-family:Arial, Helvetica, sans-serif; font-weight:500; font-size:17px; color:var(--ink); margin-top:10px; }
 .aspect-result-tagline{ font-size:12.5px; color:var(--ink-soft); font-style:italic; margin-top:2px; }
 .aspect-result-example{ background:var(--paper); border-radius:10px; padding:12px; margin:14px 0; }
 .aspect-result-ru{ font-size:16px; }
@@ -598,7 +598,7 @@ main{flex:1; padding:24px;}
 }
 @media (max-width:560px){ .motion-row{ grid-template-columns:1fr; } }
 .motion-verb{ display:flex; align-items:center; gap:6px; flex-wrap:wrap; }
-.motion-word{ font-family:'Poppins',sans-serif; font-weight:500; }
+.motion-word{ font-family:Arial, Helvetica, sans-serif; font-weight:500; }
 .motion-verb-label{ font-size:11px; color:var(--ink-soft); }
 .motion-tr{ font-size:12.5px; color:var(--ink-soft); text-align:right; }
 @media (max-width:560px){ .motion-tr{ text-align:left; } }
@@ -627,7 +627,7 @@ main{flex:1; padding:24px;}
   border-radius:999px; padding:2px 9px; font-weight:500;
 }
 .skeleton-streak{ font-size:12px; color:var(--ink-soft); font-weight:500; }
-.skeleton-result-ru{ font-size:19px; font-family:'Poppins',sans-serif; display:flex; align-items:center; gap:8px; transition:opacity .15s ease; }
+.skeleton-result-ru{ font-size:19px; font-family:Arial, Helvetica, sans-serif; display:flex; align-items:center; gap:8px; transition:opacity .15s ease; }
 .skeleton-result-ru.spinning{ opacity:.35; }
 .skeleton-result-tr{ font-size:13px; color:var(--ink-soft); margin-top:4px; }
 
@@ -638,7 +638,7 @@ main{flex:1; padding:24px;}
 .hack-flip-card.flip-card{ height:190px; }
 .arabic-card-label{ font-size:13px; color:var(--ink-soft); margin-top:8px; }
 .arabic-card-example{ font-size:18px; margin-top:6px; }
-.arabic-card-russian{ font-family:'Poppins',sans-serif; font-size:16px; margin-top:8px; }
+.arabic-card-russian{ font-family:Arial, Helvetica, sans-serif; font-size:16px; margin-top:8px; }
 .arabic-card-why{ font-size:12px; color:var(--ink-soft); margin-top:8px; padding:0 6px; }
 
 /* Top 15 - a swipeable "stories" deck: a segmented progress bar up top
@@ -654,7 +654,7 @@ main{flex:1; padding:24px;}
   align-items:center; justify-content:center; box-shadow:var(--shadow); cursor:pointer; user-select:none;
 }
 .top15-count{ font-size:12px; opacity:.7; margin-bottom:10px; font-weight:500; }
-.top15-text{ font-size:19px; font-family:'Poppins',sans-serif; margin:0; max-width:44ch; }
+.top15-text{ font-size:19px; font-family:Arial, Helvetica, sans-serif; margin:0; max-width:44ch; }
 .top15-controls{ display:flex; align-items:center; justify-content:space-between; gap:10px; margin-top:16px; }
 .top15-nav-btn{
   border:1px solid var(--line); background:var(--paper); border-radius:999px;
@@ -715,7 +715,7 @@ main{flex:1; padding:24px;}
   grid-template-columns:34px 1fr 1fr auto auto auto auto; align-items:center; gap:10px;
   padding:10px 12px; font-family:inherit;
 }
-.w1000-rank{ color:var(--ink-soft); font-size:12px; font-family:'Poppins',sans-serif; }
+.w1000-rank{ color:var(--ink-soft); font-size:12px; font-family:Arial, Helvetica, sans-serif; }
 .w1000-ru{ font-weight:500; }
 .w1000-en{ color:var(--ink-soft); font-size:13px; }
 .w1000-tags{ display:flex; gap:4px; flex-wrap:wrap; }
@@ -770,7 +770,7 @@ main{flex:1; padding:24px;}
   padding:20px; box-shadow:var(--shadow); text-align:center;
 }
 .w1000-sentence-prompt{
-  font-family:'Poppins',sans-serif; font-size:19px; margin:8px 0 4px;
+  font-family:Arial, Helvetica, sans-serif; font-size:19px; margin:8px 0 4px;
   display:flex; align-items:center; justify-content:center; gap:8px; flex-wrap:wrap;
 }
 .w1000-sentence-input{
@@ -786,7 +786,7 @@ main{flex:1; padding:24px;}
 .w1000-sentence-disclaimer{ margin:10px 0 0; font-size:11px; color:var(--ink-soft); font-style:italic; }
 .w1000-card-translation{
   margin-top:14px; padding-top:14px; border-top:1px solid var(--line);
-  font-family:'Poppins',sans-serif; font-size:18px;
+  font-family:Arial, Helvetica, sans-serif; font-size:18px;
 }
 .w1000-card-note-inline{
   display:block; margin-top:8px; font-family:inherit; font-size:12px;
@@ -799,13 +799,13 @@ main{flex:1; padding:24px;}
   padding:30px 20px; margin-bottom:14px; box-shadow:var(--shadow);
 }
 .w1000-listen-count{ font-size:12px; color:var(--ink-soft); margin-bottom:12px; }
-.w1000-listen-ru{ font-family:'Poppins',sans-serif; font-size:28px; font-weight:500; }
+.w1000-listen-ru{ font-family:Arial, Helvetica, sans-serif; font-size:28px; font-weight:500; }
 .w1000-listen-en{ color:var(--ink-soft); margin-top:6px; }
 
 /* Progress dashboard */
 .w1000-progress-header{ display:flex; gap:18px; flex-wrap:wrap; margin-bottom:14px; }
 .w1000-progress-stat{ display:flex; flex-direction:column; }
-.w1000-progress-stat .num{ font-family:'Poppins',sans-serif; font-size:24px; font-weight:500; }
+.w1000-progress-stat .num{ font-family:Arial, Helvetica, sans-serif; font-size:24px; font-weight:500; }
 .w1000-progress-stat .label{ font-size:12px; color:var(--ink-soft); }
 .w1000-overall-bar{ display:flex; height:10px; border-radius:999px; overflow:hidden; background:var(--paper-2); }
 .w1000-overall-caption{ font-size:12px; color:var(--ink-soft); margin:6px 0 20px; }
@@ -874,7 +874,7 @@ main{flex:1; padding:24px;}
 }
 .story-gloss-tip{
   display:block; position:absolute; bottom:100%; left:0; transform:translateY(-4px);
-  background:var(--ink); color:var(--paper); font-size:11px; font-family:'Poppins',sans-serif;
+  background:var(--ink); color:var(--paper); font-size:11px; font-family:Arial, Helvetica, sans-serif;
   padding:4px 8px; border-radius:6px; white-space:nowrap; z-index:5;
 }
 .story-progress-line{ font-size:13px; color:var(--ink-soft); margin:14px 0; }
