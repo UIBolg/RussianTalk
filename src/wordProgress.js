@@ -8,7 +8,7 @@ const PROGRESS_KEY = 'ru1000-progress';
 export const INTERVAL = [0, 1, 3, 7, 14, 40];
 
 function emptyProgress() {
-  return { v: 1, w: {}, notes: {}, log: {}, settings: { goal: 10, dir: 'ru' } };
+  return { v: 1, w: {}, notes: {}, log: {}, stories: {}, settings: { goal: 10, dir: 'ru', speechRate: 0.85 } };
 }
 
 function readProgress() {
@@ -167,10 +167,46 @@ export function useWordProgress() {
     update((prev) => ({ ...prev, settings: { ...prev.settings, dir } }));
   }, [update]);
 
+  // Shared between 1000 Words' Listen mode and Stories' read-aloud, per the
+  // Stories handoff doc ("using... the rate setting from Listen mode") -
+  // one stored preference, not two independent ones that could disagree.
+  const setSpeechRate = useCallback((rate) => {
+    update((prev) => ({ ...prev, settings: { ...prev.settings, speechRate: rate } }));
+  }, [update]);
+
   const streak = useMemo(() => computeStreak(progress.log, today), [progress.log, today]);
+
+  // Stories progress lives in the same localStorage object as word
+  // progress (progress.stories), per the Stories handoff doc, rather than
+  // a second key - reading a story never touches a word's SRS box, only
+  // answering a 1000-Words flashcard does, so the review schedule stays
+  // honest to what it's actually measuring.
+  const getStoryProgress = useCallback((storyId) => progress.stories[storyId], [progress]);
+
+  const markStoryRead = useCallback((storyId) => {
+    update((prev) => ({
+      ...prev,
+      stories: {
+        ...prev.stories,
+        [storyId]: { ...prev.stories[storyId], read: true, lastRead: today },
+      },
+    }));
+  }, [update, today]);
+
+  const saveStoryQuizScore = useCallback((storyId, score) => {
+    update((prev) => {
+      const existing = prev.stories[storyId];
+      const bestScore = Math.max(existing?.bestScore ?? 0, score);
+      return {
+        ...prev,
+        stories: { ...prev.stories, [storyId]: { ...existing, read: true, bestScore, lastRead: today } },
+      };
+    });
+  }, [update, today]);
 
   return {
     progress, today, getRecord, status, isDue, answer, setBox, toggleStar, setNote,
-    markManyKnown, setGoal, setDirection, streak,
+    markManyKnown, setGoal, setDirection, setSpeechRate, streak,
+    getStoryProgress, markStoryRead, saveStoryQuizScore,
   };
 }

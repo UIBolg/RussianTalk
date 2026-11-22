@@ -76,7 +76,15 @@ jobs.
 
 - **`src/wordProgress.js`** — the 1000 Words spaced-repetition engine
   and its `useWordProgress()` hook: per-word Leitner-box records,
-  notes, and a daily review log, persisted to `localStorage`.
+  notes, a daily review log, Stories read/quiz progress, and shared
+  settings (daily goal, card direction, speech rate), persisted to
+  `localStorage`.
+
+- **`src/data/stories.json`** / **`src/storiesData.js`** — the Stories
+  feature's data: 30 graded reading stories and the small file that
+  exposes them plus `tokenKind()`, the shared logic for telling a
+  plain/linked/name/glossed sentence token apart. See "How the
+  Stories Section Works" below.
 
 - **`src/components/`** — The staff, each with one job:
   - `TopBar.jsx` — the header bar with the logo and the Flashcards button
@@ -111,6 +119,10 @@ jobs.
     `back-row`/`topic-tab` shape, switching between `WordsBrowse.jsx`,
     `WordsStudy.jsx`, `WordsListen.jsx`, `WordsProgressDash.jsx` — see
     "How the 1000 Words Section Works" below.
+  - `Stories.jsx` — the "Stories" page shell: a sequential list →
+    reader → quiz flow (`StoryList.jsx`, `StoryReader.jsx`,
+    `StoryQuiz.jsx`, plus the shared `WordPopover.jsx`) — see "How the
+    Stories Section Works" below.
 
 - **`.github/workflows/deploy.yml`** — The auto-publish robot. Every
   time changes are pushed to `main`, this automatically rebuilds the
@@ -895,6 +907,92 @@ local copy everywhere after — never the prop. If you add a third
 screen that receives a one-shot queue/selection this same way, copy it
 into local state the same way; don't read the prop again after the
 handoff effect.
+
+## 10b. How the Stories Section Works
+
+"Stories" (nav button: "📖 Stories", `view === 'stories'` in `App.jsx`)
+is 30 graded reading stories (15 A1, 15 A2) following one storyline —
+Leila, a teacher from Jordan, visiting her friend Anna in Saint
+Petersburg — built from another complete external handoff (a feature
+doc + a pre-built `stories.json` dataset, same pattern as 1000 Words).
+It depends on 1000 Words: every linked word in a story points at a
+rank in `words.json`, and reading a story shares the exact same
+`useWordProgress()` engine and `localStorage` object.
+
+**Files:**
+- `src/data/stories.json` — the raw dataset, exactly as handed over.
+- `src/storiesData.js` — `STORIES`/`STORIES_BY_ID`, plus
+  `tokenKind(token)`, the one place that decides whether a sentence
+  token is plain text, a linked word, a name, or a glossed
+  not-on-the-list word, so the reader and quiz don't each re-derive
+  that logic.
+- `Stories.jsx` — the page shell. Unlike `WordsThousand.jsx`'s
+  parallel tab row, Stories is a **sequential** flow (list → one
+  story's reader → optionally its quiz), so it tracks a `view` plus
+  the current `storyId` instead of tabs — the same shape
+  `TopicView.jsx` uses for nesting a dialog inside a topic. Calls
+  `useWordProgress()` once, same as `WordsThousand.jsx`.
+- `StoryList.jsx` — level/topic filters, a known-word percentage per
+  story (`story.listWords` compared against `wp.status(rank)`), and a
+  badge (Not started / Read / Quiz: N/3) read from the new
+  `progress.stories` map.
+- `StoryReader.jsx` — renders each sentence by walking its `tokens`
+  array and switching on `tokenKind()`: plain text and names render
+  inert, a linked word opens `WordPopover.jsx`, a glossed word reveals
+  its English on tap (a per-token `revealed` `Set`, the same
+  guess-then-reveal shape used throughout Language Hacks). Opening a
+  story calls `wp.markStoryRead()` immediately — **reading never
+  touches a word's spaced-repetition box**, only answering a 1000
+  Words flashcard (or the popover's/quiz's explicit "Add to study")
+  does that, so the review schedule stays honest to what it actually
+  measures.
+- `StoryQuiz.jsx` — one question at a time, options shuffled per
+  render (`shuffledQuestion()` tracks the new correct index after
+  shuffling, not just the original one), immediate right/wrong
+  styling, then a final score saved via `wp.saveStoryQuizScore()`. A
+  real bug here, now fixed: the end screen's "Add N unknown words"
+  button computed `unknownRanks` fresh on every render; clicking it
+  added those words (moving them out of "new" status), which
+  immediately made the *next* render's fresh computation empty,
+  vanishing the button instead of showing its "✓ Added" confirmation.
+  Fixed by snapshotting `unknownRanks` once (`useMemo` keyed on `done`)
+  the moment the quiz finishes, not recomputing it live afterward. If
+  you add another "do a bulk action, then show a confirmation on the
+  same control" button anywhere, snapshot whatever count the button's
+  own visibility depends on the same way — don't let the action's own
+  side effect erase the condition that's still rendering it.
+- `WordPopover.jsx` — the tap-a-word sheet. Deliberately **not** a
+  literal reuse of `WordsBrowse.jsx`'s row-detail (which is an inline
+  expand built for note-editing inside a list row) — this is a
+  floating overlay triggered mid-sentence and only needs to show
+  status/translation plus an "Add to study" button, so it's its own
+  small component, reusing the same lookup tables
+  (`WORDS_BY_RANK`/`POS_LABELS`/`STATUS_COLORS`/`statusForRecord`)
+  rather than a second copy of that logic. Reuses the existing
+  `.modal-backdrop` overlay mechanic from `TrainingModal.jsx` rather
+  than inventing a bottom-sheet-vs-popover split by viewport width.
+
+**The playback rate is a genuinely shared setting, not two
+independent ones.** The handoff doc asked for Stories' read-aloud to
+use "the rate setting from Listen mode" — rather than approximate
+that, `progress.settings.speechRate` now lives in the same shared
+progress object (see `wordProgress.js`'s `setSpeechRate()`), and
+`WordsListen.jsx` was changed to read/write it instead of its own
+local-only `speedId` state. `speak()` and `speakSequence()` in
+`speech.js` both gained an optional `rate` override (used only when
+explicitly passed; every existing caller is unaffected) because
+neither could previously express "this rate, regardless of dialogue
+side" — Stories' sentences have no dialogue role at all.
+`SpeakerButton.jsx` gained a matching optional `rate` prop for the
+same reason.
+
+**Deliberately deferred, not built here:** the handoff doc's step 5 —
+showing a "Seen in story: В кафе" back-link on a word's row in
+`WordsBrowse.jsx` — would mean indexing every story's `listWords` and
+threading that lookup into an already-built, already-tested screen.
+Left as a follow-up, the same reasoning as 1000 Words' own deferred
+`ChatPanel.jsx` cross-link: a cross-feature enhancement, not required
+for Stories to work.
 
 ## 11. Things Not To Do
 

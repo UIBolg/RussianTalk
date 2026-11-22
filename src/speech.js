@@ -92,13 +92,13 @@ function stopActiveSequence() {
   }
 }
 
-export function speak(text, { lang = 'ru-RU', side } = {}) {
+export function speak(text, { lang = 'ru-RU', side, rate } = {}) {
   if (!isSpeechSupported()) return;
   stopActiveSequence();
   window.speechSynthesis.cancel();
   const utterance = new SpeechSynthesisUtterance(text);
   utterance.lang = lang;
-  utterance.rate = pickRate(side);
+  utterance.rate = rate ?? pickRate(side);
   utterance.pitch = pickPitch(side);
   const voice = pickVoice(lang, side);
   if (voice) utterance.voice = voice;
@@ -117,8 +117,12 @@ export function stopSpeaking() {
 // onStepStart(index) fires right before each item starts; onDone() fires
 // exactly once, whether playback finished naturally, was stopped
 // explicitly, or was interrupted by another speak()/speakSequence() call
-// elsewhere in the app.
-export function speakSequence(items, { lang = 'ru-RU', onStepStart, onDone } = {}) {
+// elsewhere in the app. An explicit `rate` (both here and in speak())
+// overrides the normal side-based rate entirely - used by Stories' read-
+// aloud, which has no dialogue "side" at all and instead shares whatever
+// speed the student picked in 1000 Words' Listen mode
+// (progress.settings.speechRate).
+export function speakSequence(items, { lang = 'ru-RU', rate, onStepStart, onDone } = {}) {
   if (!isSpeechSupported() || !items.length) {
     onDone?.();
     return () => {};
@@ -149,7 +153,7 @@ export function speakSequence(items, { lang = 'ru-RU', onStepStart, onDone } = {
     const item = items[i];
     const utterance = new SpeechSynthesisUtterance(item.text);
     utterance.lang = lang;
-    utterance.rate = pickRate(item.side);
+    utterance.rate = rate ?? pickRate(item.side);
     utterance.pitch = pickPitch(item.side);
     const voice = pickVoice(lang, item.side);
     if (voice) utterance.voice = voice;

@@ -44,7 +44,6 @@ function buildPlaylist(source, queue, wp) {
 
 export default function WordsListen({ wp, queue, onQueueConsumed }) {
   const [source, setSource] = useState('week');
-  const [speedId, setSpeedId] = useState('relaxed');
   const [shuffled, setShuffled] = useState(false);
   const [playing, setPlaying] = useState(false);
   const [paused, setPaused] = useState(false);
@@ -70,7 +69,10 @@ export default function WordsListen({ wp, queue, onQueueConsumed }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [source, customPlaylistQueue, shuffled, wp.today]);
 
-  const rate = SPEEDS.find((s) => s.id === speedId).rate;
+  // Shared with Stories' read-aloud - one stored preference (see
+  // wordProgress.js's setSpeechRate), not an independent local setting.
+  const rate = wp.progress.settings.speechRate ?? 0.85;
+  const speedId = SPEEDS.find((s) => s.rate === rate)?.id ?? 'relaxed';
 
   function stop() {
     controllerRef.current?.stop();
@@ -113,7 +115,10 @@ export default function WordsListen({ wp, queue, onQueueConsumed }) {
       <div className="w1000-study-settings">
         <label>
           Speed:
-          <select value={speedId} onChange={(e) => { stop(); setSpeedId(e.target.value); }}>
+          <select
+            value={speedId}
+            onChange={(e) => { stop(); wp.setSpeechRate(SPEEDS.find((s) => s.id === e.target.value).rate); }}
+          >
             {SPEEDS.map((s) => <option key={s.id} value={s.id}>{s.label}</option>)}
           </select>
         </label>
